@@ -1,0 +1,16 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+logging/
+_internal/
+分发/
+debug.py
+Simple Player.exe
+z_main-D.spec

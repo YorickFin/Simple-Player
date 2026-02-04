@@ -1,0 +1,409 @@
+
+import json
+from PySide6.QtWidgets import (QTableView, QHeaderView, QFileDialog,
+                            QMenu, QSlider, QLabel, QWidgetAction)
+from PySide6.QtCore import QTimer, QStandardPaths, QPoint
+from PySide6.QtGui import QAction, QPixmap, QIcon, QCursor, Qt
+from pathlib import Path
+from threading import Thread
+
+from res.ui import main_ui
+from res.qrc import main_rc  # noqa: F401
+from res.tablemodel import TableModel
+from res.win_super import WindowSuper
+from res.marqueelabel import MarqueeLabel
+from src.audio_extract import AudioExtractor
+
+class MainWindow(WindowSuper):
+
+    def __init__(self, signal_manager, logger, parent=None):
+        super(MainWindow, self).__init__(parent)
+        self.signal_manager = signal_manager
+        self.logger = logger
+        self.audio_extractor = AudioExtractor()
+
+        self.ui = main_ui.Ui_Form()
+        self.ui.setupUi(self)
+        self.init_ui()
+        self.replace_music_name_label()
+        self.init_config()
+
+        self.ui.background.setStyleSheet("QFrame#background{border-image: url('res/background/bgd.jpg');}")
+        self.ui.musicLogoPushButton.setIcon(QIcon(QPixmap(r'res\img\music.png')))
+        self.textAdaptation(r'res\qss\main.qss', self)
+        self.windowAdaptation()
+
+        self.play_num = 0
+        self.data = []
+        self.music_dict = {}
+
+        # tableview
+        self.init_tableview()
+
+        # menuListWidget
+        self.ui.subTabWidget.setCurrentIndex(3)
+        self.ui.menuListWidget.currentRowChanged.connect(self.on_menu_change)
+
+        # folderListWidget
+        self.default_option_management()
+        self.load_folder_config()
+        self.ui.folderListWidget.customContextMenuRequested.connect(self.folder_list_menu)
+        self.ui.folderListWidget.itemClicked.connect(lambda item: self.fill_tableview(item.text()))
+
+        # playModeRButton
+        self.load_playMode_imga()
+        self.ui.playModeRButton1.clicked.connect(self.playMode)
+        # self.ui.playModeRButton2.clicked.connect(self.playMode)
+
+        # volumeControlRButton
+        self.volume_menu(self.config['volume'])
+        self.on_volume_changed(self.config['volume'])
+        self.ui.volumeControlRButton1.clicked.connect(lambda: self.show_volume_slider(self.ui.volumeControlRButton1))
+        # self.ui.volumeControlRButton2.clicked.connect(lambda: self.show_volume_slider(self.ui.volumeControlRButton2))
+
+        # play_control
+        self.ui.playRButton1.toggled.connect(self.play_control)
+        # self.ui.playRButton2.toggled.connect(self.play_control)
+        self.ui.pgupRButton1.clicked.connect(self.pgup_music)
+        # self.ui.pgupRButton2.clicked.connect(self.pgup_music)
+        self.ui.pgdnRButton1.clicked.connect(self.pgdn_music)
+        # self.ui.pgdnRButton2.clicked.connect(self.pgdn_music)
+        self.ui.playSlider1.sliderReleased.connect(lambda: self.seek(self.ui.playSlider1.value()))
+        # self.ui.playSlider2.sliderReleased.connect(lambda: self.seek(self.ui.playSlider2.value()))
+
+        self.ui.winCloseRButton.clicked.connect(self.close)
+        self.ui.winMiniRButton.clicked.connect(self.showMinimized)
+
+# ########################################## replace_music_name_label ##########################################
+
+    def replace_music_name_label(self):
+        old_label = self.ui.musicNameLabel
+        parent = old_label.parent()
+        layout = self.ui.horizontalLayout_4
+
+        new_label = MarqueeLabel(parent)
+        new_label.setObjectName("musicNameLabel")
+        new_label.setMinimumSize(150, 26)
+        new_label.setMaximumSize(150, 16777215)
+
+        index = layout.indexOf(old_label)
+        layout.removeWidget(old_label)
+        old_label.deleteLater()
+
+        layout.insertWidget(index, new_label)
+        self.ui.musicNameLabel = new_label
+
+# ########################################## init_config ##########################################
+
+    def init_config(self):
+        with open('res/config/config.json', 'r', encoding='utf-8') as f:
+            self.config = json.load(f)
+        with open('res/config/music_config.json', 'r', encoding='utf-8') as f:
+            self.music_config = json.load(f)
+
+        with open('res/qss/loop_one_song.qss', 'r', encoding='utf-8') as f:
+            self.loop_one_song_qss = f.read()
+        with open('res/qss/ordered_play.qss', 'r', encoding='utf-8') as f:
+            self.ordered_play_qss = f.read()
+        with open('res/qss/random_play.qss', 'r', encoding='utf-8') as f:
+            self.random_play_qss = f.read()
+
+# ########################################## menuListWidget ##########################################
+
+    def on_menu_change(self, index):
+        self.ui.subTabWidget.setCurrentIndex(index)
+        if index == 0:
+            self.ui.subTabWidget.setCurrentIndex(3)
+            self.load_all_music()
+            self.ui.subTabWidget.setCurrentIndex(index)
+
+    def load_all_music(self):
+        if len(self.music_config) != 0:
+            self.data.clear()
+            for music_files in self.music_config:
+                for music_file in self.music_config[music_files]:
+                    music_file = Path(music_file)
+                    audio_info = self.audio_extractor.extract(music_file, extract_cover=True)
+
+                    file_stem = music_file.stem
+                    if audio_info.has_cover:
+                        cover_data = audio_info.cover_data
+                    else:
+                        cover_data = r'res\img\music.png'
+                    self.music_dict[file_stem] = str(music_file)
+                    self.data.append([cover_data, file_stem, self.audio_extractor.format_duration(audio_info.duration)])
+
+            self.table_model = TableModel(self.data)
+            self.table_view = self.ui.tableView
+            self.table_view.setModel(self.table_model)
+
+            self.ui.subTabWidget.setEnabled(False)
+            self.ui.subTabWidget.setCurrentIndex(0)
+            self.ui.subTabWidget.setEnabled(True)
+
+            self.resize_table_view()
+
+            self.table_view.selectionModel().currentChanged.connect(self.on_play)
+
+# ########################################## folderListWidget ##########################################
+
+    def default_option_management(self):
+        # 获取所有项对象
+        items = [self.ui.folderListWidget.item(i) for i in range(self.ui.folderListWidget.count())]
+        if len(items) > 1:  # 有其它项时删除默认项
+            for item in items:
+                text = item.text()
+                if text == '鼠标右键以添加或删除文件夹':
+                    taken_item = self.ui.folderListWidget.takeItem(self.ui.folderListWidget.row(item))
+                    del taken_item
+
+        elif len(items) == 0:   # 没有项时添加默认项
+            self.ui.folderListWidget.addItem('鼠标右键以添加或删除文件夹')
+
+    def load_folder_config(self):
+        for folder_path in self.config['folder_list']:
+            self.ui.folderListWidget.addItem(folder_path)
+        self.default_option_management()
+
+    def folder_list_menu(self, position):
+        self.folder_list_Qmenu = QMenu(self)
+        self.add_folder_action = QAction('添加文件夹', self)
+        self.remove_folder_action = QAction('删除文件夹', self)
+
+        if self.ui.folderListWidget.itemAt(position):
+            self.folder_list_Qmenu.addAction(self.add_folder_action)
+            self.folder_list_Qmenu.addAction(self.remove_folder_action)
+
+            self.add_folder_action.triggered.connect(self.add_folder)
+            self.remove_folder_action.triggered.connect(lambda: self.remove_folder(self.ui.folderListWidget.currentItem().text()))
+
+            self.folder_list_Qmenu.exec(QPoint(QCursor.pos().x() + 8, QCursor.pos().y() - 5))
+        else:
+            self.folder_list_Qmenu.addAction(self.add_folder_action)
+            self.add_folder_action.triggered.connect(self.add_folder)
+            self.folder_list_Qmenu.exec(QPoint(QCursor.pos().x() + 8, QCursor.pos().y() - 5))
+
+    def add_folder(self):
+        if self.config['default_open_folder']:
+            open_folder = self.config['default_open_folder']
+        else:
+            open_folder = QStandardPaths.writableLocation(QStandardPaths.MusicLocation)
+        options = QFileDialog.Options(0)
+        options |= QFileDialog.ReadOnly
+        folder_path = QFileDialog.getExistingDirectory(self, "选择文件夹", open_folder, options=options)
+        if folder_path:
+            folder_path = Path(folder_path)
+            if str(folder_path) not in self.config['folder_list']:
+                self.ui.folderListWidget.addItem(str(folder_path))
+                self.config['folder_list'].append(str(folder_path))
+            self.config['default_open_folder'] = str(folder_path.parent)
+            with open('res/config/config.json', 'w', encoding='utf-8') as f:
+                json.dump(self.config, f, ensure_ascii=False, indent=4)
+        Thread(target=self.get_music_files, args=(folder_path,)).start()
+        self.default_option_management()
+
+    def remove_folder(self, folder_path: str):
+        taken_item = self.ui.folderListWidget.takeItem(self.ui.folderListWidget.row(self.ui.folderListWidget.findItems(folder_path, Qt.MatchExactly)[0]))
+        del taken_item
+        if folder_path in self.config['folder_list']:
+            self.config['folder_list'].remove(folder_path)
+            self.music_config.pop(folder_path)
+            with open('res/config/config.json', 'w', encoding='utf-8') as f:
+                json.dump(self.config, f, ensure_ascii=False, indent=4)
+            with open('res/config/music_config.json', 'w', encoding='utf-8') as f:
+                json.dump(self.music_config, f, ensure_ascii=False, indent=4)
+        self.default_option_management()
+
+    def get_music_files(self, path):
+        path = Path(path)
+        music_files = list(path.glob('*.mp3')) + \
+                      list(path.glob('*.wav')) + \
+                      list(path.glob('*.flac'))
+        self.music_config[str(path)] = [str(music_file) for music_file in music_files]
+        with open('res/config/music_config.json', 'w', encoding='utf-8') as f:
+            json.dump(self.music_config, f, ensure_ascii=False, indent=4)
+
+    def fill_tableview(self, item):
+        self.data = []
+        music_files = self.music_config[item]
+        for music_file in music_files:
+            music_file = Path(music_file)
+            audio_info = self.audio_extractor.extract(music_file, extract_cover=True)
+
+            file_stem = music_file.stem
+            if audio_info.has_cover:
+                cover_data = audio_info.cover_data
+            else:
+                cover_data = r'res\img\music.png'
+            self.music_dict[file_stem] = str(music_file)
+            self.data.append([cover_data, file_stem, self.audio_extractor.format_duration(audio_info.duration)])
+
+        self.table_model = TableModel(self.data)
+        self.table_view = self.ui.tableView
+        self.table_view.setModel(self.table_model)
+
+        self.ui.subTabWidget.setEnabled(False)
+        self.ui.subTabWidget.setCurrentIndex(0)
+        self.ui.subTabWidget.setEnabled(True)
+
+        self.resize_table_view()
+
+        self.table_view.selectionModel().currentChanged.connect(self.on_play)
+
+# ########################################## tableview ##########################################
+
+    def init_tableview(self):
+        self.table_model = TableModel(self.data)
+        self.table_view = self.ui.tableView
+        self.table_view.setModel(self.table_model)
+
+        # 隐藏表头
+        self.table_view.horizontalHeader().setVisible(False)
+        self.table_view.verticalHeader().setVisible(False)
+
+        # 禁用网格显示
+        self.table_view.setShowGrid(False)
+
+        # 设置选择模式: 选择整行
+        self.table_view.setSelectionMode(QTableView.SingleSelection)
+        self.table_view.setSelectionBehavior(QTableView.SelectRows)
+
+        # 禁用默认方式列宽调整
+        self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+
+    def resize_table_view(self):
+        """调整表格视图"""
+        if not self.table_view:
+            return
+
+        total_width = self.table_view.viewport().width()
+        if total_width <= 0:
+            return
+
+        column0_width = int(total_width * 0.1)
+        column1_width = int(total_width * 0.8)
+        column2_width = total_width - column0_width - column1_width
+
+        # 调整列宽
+        self.table_view.setColumnWidth(0, column0_width)
+        self.table_view.setColumnWidth(1, column1_width)
+        self.table_view.setColumnWidth(2, column2_width)
+        # 调整行高
+        self.table_view.verticalHeader().setDefaultSectionSize(60)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        QTimer.singleShot(0, self.resize_table_view)
+
+    def on_play(self, current):
+        self.signal_manager.send_signal({'action': 'clear_played_list'})
+
+        signal_info = {
+            'action': 'play_music',
+            'music_path': self.music_dict[self.table_model._data[current.row()][1]],
+            'music_list': list(self.music_dict.values()),
+            'play_mode': self.config['play_mode'],
+        }
+        self.signal_manager.send_signal(signal_info)
+
+# ########################################## playModeRButton ##########################################
+
+    def load_playMode_imga(self):
+        mode = {
+            'ordered_play': self.ordered_play_qss,
+            'random_play': self.random_play_qss,
+            'loop_one_song': self.loop_one_song_qss,
+        }
+        self.ui.playModeRButton1.setStyleSheet(mode[self.config['play_mode']])
+        # self.ui.playModeRButton2.setStyleSheet(mode[self.config['play_mode']])
+
+    def playMode(self):
+        modes = ['ordered_play', 'random_play', 'loop_one_song']
+        current_index = modes.index(self.config['play_mode'])
+        self.config['play_mode'] = modes[(current_index + 1) % 3]
+
+        self.load_playMode_imga()
+        with open('res/config/config.json', 'w', encoding='utf-8') as f:
+            json.dump(self.config, f, ensure_ascii=False, indent=4)
+        self.signal_manager.send_signal({'action': 'set_play_mode', 'play_mode': self.config['play_mode']})
+
+# ########################################## volumeControlRButton ##########################################
+
+    def volume_menu(self, volume):
+        self.volume_QMenu = QMenu(self)
+        self.volume_QMenu.setWindowFlags(self.volume_QMenu.windowFlags() | Qt.FramelessWindowHint)
+        self.volume_QMenu.setAttribute(Qt.WA_TranslucentBackground)
+        self.volume_QMenu.setStyleSheet("""
+            QMenu {
+                background-color: rgba(47, 54, 72, 230);
+                border-radius: 5px;
+                padding: 6px;
+                border: 0px solid;
+            }
+            QMenu::item {
+                background-color: rgba(47, 54, 72, 230);
+            }
+        """)
+
+        self.volume_slider = QSlider(Qt.Vertical)
+        self.volume_slider.setRange(0, 100)
+        self.volume_slider.setValue(volume)
+        self.volume_slider.setFixedWidth(26)
+        self.volume_slider.valueChanged.connect(self.on_volume_changed)
+        self.volume_slider.sliderReleased.connect(self.save_volume)
+
+        slider_action = QWidgetAction(self.volume_QMenu)
+        slider_action.setDefaultWidget(self.volume_slider)
+        self.volume_QMenu.addAction(slider_action)
+
+        self.volume_label = QLabel(f"{volume}%")
+        self.volume_label.setAlignment(Qt.AlignCenter)
+        self.volume_label.setFixedWidth(26)
+        label_action = QWidgetAction(self.volume_QMenu)
+        label_action.setDefaultWidget(self.volume_label)
+        self.volume_QMenu.addAction(label_action)
+
+    def show_volume_slider(self, ui):
+        """显示音量滑块菜单"""
+        # 计算菜单显示位置
+        btn_rect = ui.rect()
+        global_pos = ui.mapToGlobal(btn_rect.bottomLeft())
+        # 显示菜单
+        self.volume_QMenu.exec(QPoint(global_pos.x() -8, global_pos.y() - 140))
+
+    def on_volume_changed(self, value):
+        """音量改变时的处理"""
+        self.config['volume'] = value
+        self.volume_label.setText(f"{value}%")
+        self.signal_manager.send_signal({'action': 'set_volume', 'volume': value / 100})
+
+    def save_volume(self):
+        """保存音量"""
+        with open('res/config/config.json', 'w', encoding='utf-8') as f:
+            json.dump(self.config, f, ensure_ascii=False, indent=4)
+
+# ########################################## play_control ##########################################
+
+    def play_control(self, checked: bool):
+        if checked:
+            self.signal_manager.send_signal({'action': 'play_control', 'info': 'resume'})
+        else:
+            self.signal_manager.send_signal({'action': 'play_control', 'info': 'pause'})
+
+    def pgup_music(self):
+        self.signal_manager.send_signal({'action': 'play_control', 'info': 'pgup'})
+
+    def pgdn_music(self):
+        self.signal_manager.send_signal({'action': 'play_control', 'info': 'pgdn'})
+
+    def seek(self, value: int):
+        self.signal_manager.send_signal({'action': 'seek', 'info': value})
+
+
+
+
+
+
+
+
+

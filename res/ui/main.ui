@@ -1,0 +1,1423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Simple Player</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">*
+{
+	font: 10pt &quot;楷体&quot;;
+	font-size: 13pt;
+	color: white;
+}
+
+
+/************************************ QFrame ************************************/
+
+QFrame#background
+{
+	background-color: #2F3648;
+}
+
+
+/************************************ QPushButton  ************************************/
+
+/*原始*/
+QPushButton
+{
+	background-color: transparent;
+	border-radius: 0px;
+}
+
+/*悬停*/
+QPushButton:hover
+{
+	color: #2196F3;
+}
+
+/*按下*/
+QPushButton:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+
+/************************************ QLabel  ************************************/
+
+QLabel
+{
+	background-color: transparent;
+}
+
+
+/************************************ QListWidget  ************************************/
+
+/*原始*/
+QListWidget
+{
+	background-color: transparent;
+	border-radius: 0px;
+	outline: 0px;
+	font-size: 14pt;
+}
+
+/*项目*/
+QListWidget::item
+{
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	margin-left: 5px;
+	margin-right: 5px;
+	border-radius: 5px;
+}
+
+/*悬停*/
+QListWidget::item:hover
+{
+	background-color: rgba(91, 132, 176, 170);
+	color: #2196F3;
+}
+
+/*选中*/
+QListWidget::item:selected
+{
+    background-color: rgba(91, 132, 176, 170);
+}
+
+/*离开*/
+QListWidget::item:selected:!active
+{
+	color: white;
+}
+
+
+/************************************ QTabWidget  ************************************/
+
+/*原始*/
+QTabWidget
+{
+	background-color: transparent;
+}
+
+
+QTabWidget::pane
+{
+	border-top: 0px solid;
+	padding-top: -20px;
+	margin-top: 0px;
+}
+
+QTabWidget::tab-bar
+{
+    left: 0px;
+}
+
+QTabBar::tab
+{
+    color: white;
+    border: 0px solid;
+    padding: 0px;
+}
+
+QTabBar::tab:selected
+{
+    min-height: 0px;
+    color: white;
+    border: 0px solid;
+    border-bottom: 0px solid;
+}
+
+
+/************************************ QTableView ************************************/
+
+/* 隐藏单元格线框 */
+QTableView
+{
+	selection-background-color: rgba(91, 132, 176, 170);
+    selection-color: white;
+    background-color: transparent;
+	gridline-color: transparent;
+    border: none;
+    outline: none;
+}
+
+/* 隐藏表格内容区域的边框 */
+QTableView::item
+{
+    border: none;
+    margin: 0px;
+    padding: 0px;
+    outline: none;
+}
+
+/* 确保选中状态也没有边框和分隔 */
+QTableView::item:selected
+{
+    border: none;
+    margin: 0px;
+    padding: 0px;
+    outline: none;
+}
+
+/* 确保选中行没有内部分隔 */
+QTableView::item:selected
+{
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+}
+
+/* 去除焦点指示器 */
+QTableView:focus
+{
+    outline: none;
+}
+
+QTableView::item:focus
+{
+    outline: none;
+}
+
+
+/************************************ QRadioButton  ************************************/
+
+/*原始*/
+QRadioButton#winMiniRButton::indicator:checked
+{
+	border-image: url(:/min/img/mini.png);
+	width: 15px;
+	height: 15px;
+}
+
+QRadioButton#winMiniRButton::indicator:unchecked
+{
+	border-image: url(:/min/img/mini.png);
+	width: 15px;
+	height: 15px;
+}
+
+/*悬停*/
+QRadioButton#winMiniRButton::indicator:checked:hover
+{
+	border-image: url(:/min/img/minis.png);
+	width: 15px;
+	height: 15px;
+}
+QRadioButton#winMiniRButton::indicator:unchecked:hover
+{
+	border-image: url(:/min/img/minis.png);
+	width: 15px;
+	height: 15px;
+}
+
+QRadioButton#winMiniRButton:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+/************/
+
+/*原始*/
+QRadioButton#winMaxRButton::indicator:checked
+{
+	border-image: url(:/nmax/img/nmax.png);
+	width: 15px;
+	height: 15px;
+}
+
+QRadioButton#winMaxRButton::indicator:unchecked
+{
+	border-image: url(:/max/img/max.png);
+	width: 15px;
+	height: 15px;
+}
+
+/*悬停*/
+QRadioButton#winMaxRButton::indicator:checked:hover
+{
+	border-image: url(:/nmax/img/nmaxs.png);
+	width: 15px;
+	height: 15px;
+}
+QRadioButton#winMaxRButton::indicator:unchecked:hover
+{
+	border-image: url(:/max/img/maxs.png);
+	width: 15px;
+	height: 15px;
+}
+
+QRadioButton#winMaxRButton:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+/************/
+
+/*原始*/
+QRadioButton#winCloseRButton::indicator:checked
+{
+	border-image: url(:/close/img/close.png);
+	width: 15px;
+	height: 15px;
+}
+
+QRadioButton#winCloseRButton::indicator:unchecked
+{
+	border-image: url(:/close/img/close.png);
+	width: 15px;
+	height: 15px;
+}
+
+/*悬停*/
+QRadioButton#winCloseRButton::indicator:checked:hover
+{
+	border-image: url(:/close/img/closes.png);
+	width: 15px;
+	height: 15px;
+}
+QRadioButton#winCloseRButton::indicator:unchecked:hover
+{
+	border-image: url(:/close/img/closes.png);
+	width: 15px;
+	height: 15px;
+}
+
+QRadioButton#winCloseRButton:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+/************/
+
+/*原始*/
+QRadioButton#playRButton1::indicator:checked,
+QRadioButton#playRButton2::indicator:checked
+{
+	border-image: url(:/pause/img/pause.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#playRButton1::indicator:unchecked,
+QRadioButton#playRButton2::indicator:unchecked
+{
+	border-image: url(:/play/img/play.png);
+	width: 22px;
+	height: 22px;
+}
+
+/*悬停*/
+QRadioButton#playRButton1::indicator:checked:hover,
+QRadioButton#playRButton2::indicator:checked:hover
+{
+	border-image: url(:/pause/img/pauses.png);
+	width: 22px;
+	height: 22px;
+}
+QRadioButton#playRButton1::indicator:unchecked:hover,
+QRadioButton#playRButton2::indicator:unchecked:hover
+{
+	border-image: url(:/play/img/plays.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#playRButton1:pressed,
+QRadioButton#playRButton2:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+/************/
+
+/*原始*/
+QRadioButton#pgupRButton1::indicator:checked,
+QRadioButton#pgupRButton2::indicator:checked
+{
+	border-image: url(:/pgup/img/pgup.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#pgupRButton1::indicator:unchecked,
+QRadioButton#pgupRButton2::indicator:unchecked
+{
+	border-image: url(:/pgup/img/pgup.png);
+	width: 22px;
+	height: 22px;
+}
+
+/*悬停*/
+QRadioButton#pgupRButton1::indicator:checked:hover,
+QRadioButton#pgupRButton2::indicator:checked:hover
+{
+	border-image: url(:/pgup/img/pgups.png);
+	width: 22px;
+	height: 22px;
+}
+QRadioButton#pgupRButton1::indicator:unchecked:hover,
+QRadioButton#pgupRButton2::indicator:unchecked:hover
+{
+	border-image: url(:/pgup/img/pgups.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#pgupRButton1:pressed,
+QRadioButton#pgupRButton2:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+/************/
+
+/*原始*/
+QRadioButton#pgdnRButton1::indicator:checked,
+QRadioButton#pgdnRButton2::indicator:checked
+{
+	border-image: url(:/pgdn/img/pgdn.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#pgdnRButton1::indicator:unchecked,
+QRadioButton#pgdnRButton2::indicator:unchecked
+{
+	border-image: url(:/pgdn/img/pgdn.png);
+	width: 22px;
+	height: 22px;
+}
+
+/*悬停*/
+QRadioButton#pgdnRButton1::indicator:checked:hover,
+QRadioButton#pgdnRButton2::indicator:checked:hover
+{
+	border-image: url(:/pgdn/img/pgdns.png);
+	width: 22px;
+	height: 22px;
+}
+QRadioButton#pgdnRButton1::indicator:unchecked:hover,
+QRadioButton#pgdnRButton2::indicator:unchecked:hover
+{
+	border-image: url(:/pgdn/img/pgdns.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#pgdnRButton1:pressed,
+QRadioButton#pgdnRButton2:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+/************/
+
+/*原始*/
+QRadioButton#volumeControlRButton1::indicator:checked,
+QRadioButton#volumeControlRButton2::indicator:checked
+{
+	border-image: url(:/volume/img/volume.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#volumeControlRButton1::indicator:unchecked,
+QRadioButton#volumeControlRButton2::indicator:unchecked
+{
+	border-image: url(:/volume/img/volume.png);
+	width: 22px;
+	height: 22px;
+}
+
+/*悬停*/
+QRadioButton#volumeControlRButton1::indicator:checked:hover,
+QRadioButton#volumeControlRButton2::indicator:checked:hover
+{
+	border-image: url(:/volume/img/volumes.png);
+	width: 22px;
+	height: 22px;
+}
+QRadioButton#volumeControlRButton1::indicator:unchecked:hover,
+QRadioButton#volumeControlRButton2::indicator:unchecked:hover
+{
+	border-image: url(:/volume/img/volumes.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#volumeControlRButton1:pressed,
+QRadioButton#volumeControlRButton2:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+
+/************************************ QSlider ************************************/
+
+QSlider::handle:horizontal {
+    background: #82d7dc;
+    border: 1px solid #82d7dc;
+    width: 10px;
+    margin: -5px -0.5px;
+    border-radius: 5px;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+QSlider::groove:horizontal {
+    border: 1px solid;
+    height: 3px;
+    border-radius: 2px;
+}
+
+QSlider::add-page:horizontal {
+    background: #67779e;
+    border-radius: 2px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #dc82d7;
+    border-radius: 2px;
+}
+
+
+/************************************ QScrollBar  ************************************/
+
+/*滚动条边框*/
+QScrollBar
+{
+	background-color: transparent;
+}
+
+/*滚动条*/
+QScrollBar::handle
+{
+	border-radius: 3px;
+    background: #5a6375;
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+/*滚动条鼠标悬停*/
+QScrollBar::handle:hover
+{
+    background: #6f7b91;
+}
+
+/*下方箭头*/
+QScrollBar::add-line
+{
+    height: 0px;
+	width: 0px;
+}
+
+/*上方箭头*/
+QScrollBar::sub-line
+{
+    height: 0px;
+	width: 0px;
+}
+
+/*滑块已经经过的滑轨区域的颜色*/
+QScrollBar::add-page:vertical
+{
+    background-color: transparent;
+}
+
+/*滑块还没经过的滑轨区域的颜色*/
+QScrollBar::sub-page
+{
+    background-color: transparent;
+}
+
+
+/************************************ QMenu  ************************************/
+
+/*原始*/
+QMenu
+{
+	background-color: #2F3648;
+	color: white;
+	border : 1px solid #000000;
+}
+
+/*子项*/
+QMenu::item
+{
+	height: 20px;
+	margin: 5px 10px 5px 10px;
+}
+
+/*悬浮子项*/
+QMenu::item:selected
+{
+	color: #2196F3;
+	padding-bottom: -1px;
+	padding-left: 1px
+}</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <item>
+    <widget class="QFrame" name="background">
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <property name="leftMargin">
+       <number>6</number>
+      </property>
+      <property name="topMargin">
+       <number>4</number>
+      </property>
+      <property name="rightMargin">
+       <number>6</number>
+      </property>
+      <property name="bottomMargin">
+       <number>6</number>
+      </property>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_1">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="icon">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>26</width>
+            <height>26</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="scaledContents">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Policy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>10</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Simple Player</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,0">
+          <property name="spacing">
+           <number>20</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="winMiniRButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>26</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>21</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">winBarGroup</string>
+            </attribute>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="winMaxRButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>26</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>21</height>
+             </size>
+            </property>
+            <property name="sizeIncrement">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">winBarGroup</string>
+            </attribute>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="winCloseRButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>26</width>
+              <height>26</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>21</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <attribute name="buttonGroup">
+             <string notr="true">winBarGroup</string>
+            </attribute>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTabWidget" name="mainTabWidget">
+        <widget class="QWidget" name="mainTab">
+         <attribute name="title">
+          <string/>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <spacer name="verticalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Policy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QListWidget" name="menuListWidget">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>200</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <item>
+               <property name="text">
+                <string>音乐</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>文件夹</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>设置</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QTabWidget" name="subTabWidget">
+                <property name="currentIndex">
+                 <number>1</number>
+                </property>
+                <widget class="QWidget" name="tab">
+                 <attribute name="title">
+                  <string/>
+                 </attribute>
+                 <layout class="QHBoxLayout" name="horizontalLayout_8">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>4</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QTableView" name="tableView"/>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_1">
+                 <attribute name="title">
+                  <string/>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="verticalLayout_4">
+                  <property name="spacing">
+                   <number>0</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>3</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QListWidget" name="folderListWidget">
+                    <property name="contextMenuPolicy">
+                     <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>鼠标右键以添加或删除文件夹</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_2">
+                 <attribute name="title">
+                  <string/>
+                 </attribute>
+                </widget>
+                <widget class="QWidget" name="tab_3">
+                 <attribute name="title">
+                  <string/>
+                 </attribute>
+                </widget>
+               </widget>
+              </item>
+              <item>
+               <widget class="QFrame" name="musicInfoBGFrame">
+                <property name="frameShape">
+                 <enum>QFrame::Shape::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Shadow::Raised</enum>
+                </property>
+                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <property name="spacing">
+                  <number>0</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QPushButton" name="musicLogoPushButton">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>60</width>
+                     <height>60</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>50</width>
+                     <height>50</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout">
+                   <property name="spacing">
+                    <number>6</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_5">
+                     <property name="spacing">
+                      <number>0</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <spacer name="horizontalSpacer_6">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Fixed</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>10</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QSlider" name="playSlider1">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimum">
+                        <number>0</number>
+                       </property>
+                       <property name="maximum">
+                        <number>9999</number>
+                       </property>
+                       <property name="singleStep">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>20</number>
+                       </property>
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_7">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Fixed</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>10</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="playSliderTxt1">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="text">
+                        <string>00:00/00:00</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_4">
+                     <property name="spacing">
+                      <number>0</number>
+                     </property>
+                     <property name="leftMargin">
+                      <number>0</number>
+                     </property>
+                     <item>
+                      <spacer name="horizontalSpacer_11">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Fixed</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>10</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="musicNameLabel">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>150</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="maximumSize">
+                        <size>
+                         <width>150</width>
+                         <height>16777215</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_13">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_12">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_2">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Expanding</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="pgupRButton1">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>26</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">winBarGroup</string>
+                       </attribute>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_4">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Fixed</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="playRButton1">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>26</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">winBarGroup</string>
+                       </attribute>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_5">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Fixed</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="pgdnRButton1">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>26</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">winBarGroup</string>
+                       </attribute>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_16">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_15">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_14">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_3">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Expanding</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="playModeRButton1">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>26</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">winBarGroup</string>
+                       </attribute>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_9">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Fixed</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="volumeControlRButton1">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>26</width>
+                         <height>26</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string/>
+                       </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">winBarGroup</string>
+                       </attribute>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_10">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Policy::Fixed</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="playTab">
+         <attribute name="title">
+          <string/>
+         </attribute>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../qrc/main.qrc"/>
+ </resources>
+ <connections/>
+ <buttongroups>
+  <buttongroup name="winBarGroup">
+   <property name="exclusive">
+    <bool>false</bool>
+   </property>
+  </buttongroup>
+ </buttongroups>
+</ui>

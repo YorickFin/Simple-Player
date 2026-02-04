@@ -1,0 +1,50 @@
+<RCC>
+  <qresource prefix="max">
+    <file>../img/maxs.png</file>
+    <file>../img/max.png</file>
+  </qresource>
+  <qresource prefix="min">
+    <file>../img/minis.png</file>
+    <file>../img/mini.png</file>
+  </qresource>
+  <qresource prefix="nmax">
+    <file>../img/nmaxs.png</file>
+    <file>../img/nmax.png</file>
+  </qresource>
+  <qresource prefix="close">
+    <file>../img/close.png</file>
+    <file>../img/closes.png</file>
+  </qresource>
+  <qresource prefix="play">
+    <file>../img/play.png</file>
+    <file>../img/plays.png</file>
+  </qresource>
+  <qresource prefix="pause">
+    <file>../img/pause.png</file>
+    <file>../img/pauses.png</file>
+  </qresource>
+  <qresource prefix="pgup">
+    <file>../img/pgup.png</file>
+    <file>../img/pgups.png</file>
+  </qresource>
+  <qresource prefix="pgdn">
+    <file>../img/pgdn.png</file>
+    <file>../img/pgdns.png</file>
+  </qresource>
+  <qresource prefix="ordered_play">
+    <file>../img/ordered_play.png</file>
+    <file>../img/ordered_plays.png</file>
+  </qresource>
+  <qresource prefix="random_play">
+    <file>../img/random_play.png</file>
+    <file>../img/random_plays.png</file>
+  </qresource>
+  <qresource prefix="loop_one_song">
+    <file>../img/loop_one_song.png</file>
+    <file>../img/loop_one_songs.png</file>
+  </qresource>
+  <qresource prefix="volume">
+    <file>../img/volume.png</file>
+    <file>../img/volumes.png</file>
+  </qresource>
+</RCC>

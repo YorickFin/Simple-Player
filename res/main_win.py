@@ -123,6 +123,8 @@ class MainWindow(WindowSuper):
             self.ui.subTabWidget.setCurrentIndex(index)
 
     def load_all_music(self):
+        self.data.clear()
+        self.music_dict.clear()
         if len(self.music_config) != 0:
             self.data.clear()
             for music_files in self.music_config:
@@ -229,7 +231,8 @@ class MainWindow(WindowSuper):
             json.dump(self.music_config, f, ensure_ascii=False, indent=4)
 
     def fill_tableview(self, item):
-        self.data = []
+        self.data.clear()
+        self.music_dict.clear()
         music_files = self.music_config[item]
         for music_file in music_files:
             music_file = Path(music_file)

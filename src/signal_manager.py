@@ -1,11 +1,9 @@
 
-
-import os
-import time
 import random
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QObject, Signal, QTimer
 from PySide6.QtGui import QIcon, QPixmap
-from threading import Thread
+from threading import Thread, Event
 from pathlib import Path
 
 from res.main_win import MainWindow
@@ -27,7 +25,12 @@ class SignalManager(QObject):
 class SlotManager(QObject):
     """槽管理器"""
 
+    update_slider_signal = Signal(int, str)
+    play_finished_signal = Signal()
+    start_timer_signal = Signal()
+
     def __init__(self, logger):
+        super().__init__()
         self.logger = logger
 
         self.signal_manager = None
@@ -42,6 +45,9 @@ class SlotManager(QObject):
         self.play_list = []         # 播放列表
         self.played_list = []       # 已播放列表
         self.player = Player(logger)
+
+        self.stop_event = Event()
+        self.slider_timer = None
 
     def handle_signal(self, value: dict):
         """处理信号"""
@@ -67,16 +73,20 @@ class SlotManager(QObject):
         self.main_window.ui.playRButton1.setChecked(True)
         self.main_window.ui.playRButton1.setEnabled(True)
 
-        # self.main_window.ui.playRButton2.setEnabled(False)
-        # self.main_window.ui.playRButton2.setChecked(True)
-        # self.main_window.ui.playRButton2.setEnabled(True)
-
-        self.play_flag = False
-        time.sleep(0.3)
+        self.stop_current_playback()
         self.play_list = value['music_list']
         self.play_mode = value['play_mode']
         self.play_flag = True
         Thread(target=self.play_mode_control, args=(value['music_path'],)).start()
+
+    def stop_current_playback(self):
+        """停止当前播放"""
+        if self.play_flag:
+            self.play_flag = False
+            self.stop_event.set()
+            self.player.stop()
+            self.stop_event.clear()
+        self.stop_slider_timer()
 
     def play_control(self, value: dict):
         """播放控制"""
@@ -87,16 +97,13 @@ class SlotManager(QObject):
             self.player.pause()
 
         elif value['info'] == 'pgup':
-            self.play_flag = False
-            time.sleep(0.3)
-            self.play_flag = True
+            self.stop_current_playback()
             music_path = self.played_list[-2] if len(self.played_list) > 1 else self.played_list[-1]
+            self.play_flag = True
             Thread(target=self.play_mode_control, args=(music_path,)).start()
 
         elif value['info'] == 'pgdn':
-            self.play_flag = False
-            time.sleep(0.3)
-            self.play_flag = True
+            self.stop_current_playback()
             if self.play_mode == 'random_play':
                 music_path = random.choice(self.play_list)
                 while music_path in self.played_list:
@@ -107,21 +114,27 @@ class SlotManager(QObject):
                     music_path = self.play_list[0]
                 else:
                     music_path = self.play_list[index + 1]
+            self.play_flag = True
             Thread(target=self.play_mode_control, args=(music_path,)).start()
 
     def play_mode_control(self, music_path: str):
         """播放模式控制"""
         while self.play_flag:
             self.set_play_info(music_path)
-            Thread(target=self.update_play_slider).start()
+            self.start_timer_signal.emit()
 
             self.current_music = music_path
             self.played_list.append(music_path)
 
             self.player.load_audio(music_path)
             self.player.play()
-            while not self.player.is_finished():
-                time.sleep(0.1)
+
+            while self.play_flag and not self.player.is_finished():
+                if self.stop_event.wait(timeout=0.05):
+                    break
+
+            if not self.play_flag:
+                break
 
             if self.play_mode == 'loop_one_song':
                 continue
@@ -176,16 +189,31 @@ class SlotManager(QObject):
         self.main_window.ui.playSlider1.setValue(value)
         self.main_window.ui.playSliderTxt1.setText(text)
 
+    def start_slider_timer(self):
+        """启动进度条定时器"""
+        self.stop_slider_timer()
+        self.slider_timer = QTimer()
+        self.slider_timer.timeout.connect(self.update_play_slider)
+        self.slider_timer.start(1000)
+
+    def stop_slider_timer(self):
+        """停止进度条定时器"""
+        if self.slider_timer:
+            self.slider_timer.stop()
+            self.slider_timer = None
+
     def update_play_slider(self):
         """更新播放进度条"""
-        while self.play_flag:
-            time.sleep(1)
-            value = self.player.get_current_time()
-            if value == -1.0:
-                self.signal_manager.update_slider_signal.emit(0, '00:00/00:00')
-                break
-            text = f'{AudioExtractor().format_duration(value)}/{AudioExtractor().format_duration(self.main_window.ui.playSlider1.maximum())}'
-            self.signal_manager.update_slider_signal.emit(value, text)
+        if not self.play_flag:
+            self.stop_slider_timer()
+            return
+        value = self.player.get_current_time()
+        if value == -1.0:
+            self.signal_manager.update_slider_signal.emit(0, '00:00/00:00')
+            self.stop_slider_timer()
+            return
+        text = f'{AudioExtractor().format_duration(value)}/{AudioExtractor().format_duration(self.main_window.ui.playSlider1.maximum())}'
+        self.signal_manager.update_slider_signal.emit(value, text)
 
     def open_window(self, value: dict):
         """打开窗口"""
@@ -195,6 +223,7 @@ class SlotManager(QObject):
             self.main_window = MainWindow(self.signal_manager, self.logger)
             self.signal_manager.update_slider_signal.connect(self.update_ui_slider)
             self.signal_manager.update_music_name_signal.connect(self.update_music_name)
+            self.start_timer_signal.connect(self.start_slider_timer)
             self.main_window.show()
 
     def update_music_name(self, music_name: str):
@@ -212,5 +241,6 @@ class SlotManager(QObject):
 
     def exit_program(self):
         """退出程序"""
+        self.stop_current_playback()
         self.tray_action.cleanTray()
-        os._exit(0)
+        QApplication.instance().quit()

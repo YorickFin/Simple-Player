@@ -18,10 +18,16 @@ class WindowSuper(QWidget):
         self.ui.background.setGraphicsEffect(self.shadow)	#为frame设定阴影效果
         self.ui.icon.setPixmap(QPixmap(r"res\logo\logo_P.png"))
 
+        self.init_drag()
+
         self.desktop_size = [QApplication.instance().screens()[0].size().width(), QApplication.instance().screens()[0].size().height()]
 
 
 #   --------------------------------------------------移动功能-------------------------------------------------
+
+    def init_drag(self):
+        self._move_drag = False
+        self.m_Position = None
 
     def mousePressEvent(self, event):		#鼠标左键按下时获取鼠标坐标, 按下右键取消
         if event.button() == Qt.LeftButton:

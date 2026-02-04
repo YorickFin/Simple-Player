@@ -1,3 +1,0 @@
-pgdnRButton1
-pgupRButton1
-playRButton1

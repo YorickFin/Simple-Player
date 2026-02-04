@@ -481,7 +481,6 @@ QSlider::handle:horizontal {
     width: 10px;
     margin: -5px -0.5px;
     border-radius: 5px;
-    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 QSlider::groove:horizontal {
@@ -497,6 +496,30 @@ QSlider::add-page:horizontal {
 
 QSlider::sub-page:horizontal {
     background: #dc82d7;
+    border-radius: 2px;
+}
+
+QSlider::handle:vertical {
+    background: #82d7dc;
+    border: 1px solid #82d7dc;
+    height: 10px;  /* 将width改为height */
+    margin: -0.5px -5px;  /* 调整margin顺序 */
+    border-radius: 5px;
+}
+
+QSlider::groove:vertical {
+    border: 1px solid;
+    width: 3px;  /* 将height改为width */
+    border-radius: 2px;
+}
+
+QSlider::add-page:vertical {
+    background: #dc82d7;
+    border-radius: 2px;
+}
+
+QSlider::sub-page:vertical {
+    background: #67779e;
     border-radius: 2px;
 }
 
@@ -558,7 +581,7 @@ QMenu
 {
 	background-color: #2F3648;
 	color: white;
-	border : 1px solid #000000;
+	border: 1px solid #000000;
 }
 
 /*子项*/

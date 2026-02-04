@@ -36,6 +36,7 @@ class MainWindow(WindowSuper):
         self.play_num = 0
         self.data = []
         self.music_dict = {}
+        self.slider_pressed = False
 
         # tableview
         self.init_tableview()
@@ -68,7 +69,8 @@ class MainWindow(WindowSuper):
         # self.ui.pgupRButton2.clicked.connect(self.pgup_music)
         self.ui.pgdnRButton1.clicked.connect(self.pgdn_music)
         # self.ui.pgdnRButton2.clicked.connect(self.pgdn_music)
-        self.ui.playSlider1.sliderReleased.connect(lambda: self.seek(self.ui.playSlider1.value()))
+        self.ui.playSlider1.sliderPressed.connect(self.on_slider_pressed)
+        self.ui.playSlider1.sliderReleased.connect(self.on_slider_released)
         # self.ui.playSlider2.sliderReleased.connect(lambda: self.seek(self.ui.playSlider2.value()))
 
         self.ui.winCloseRButton.clicked.connect(self.close)
@@ -107,6 +109,9 @@ class MainWindow(WindowSuper):
             self.ordered_play_qss = f.read()
         with open('res/qss/random_play.qss', 'r', encoding='utf-8') as f:
             self.random_play_qss = f.read()
+
+        for folder_path in self.config['folder_list']:
+            Thread(target=self.get_music_files, args=(folder_path,)).start()
 
 # ########################################## menuListWidget ##########################################
 
@@ -253,10 +258,7 @@ class MainWindow(WindowSuper):
 # ########################################## tableview ##########################################
 
     def init_tableview(self):
-        self.table_model = TableModel(self.data)
         self.table_view = self.ui.tableView
-        self.table_view.setModel(self.table_model)
-
         # 隐藏表头
         self.table_view.horizontalHeader().setVisible(False)
         self.table_view.verticalHeader().setVisible(False)
@@ -398,6 +400,13 @@ class MainWindow(WindowSuper):
 
     def seek(self, value: int):
         self.signal_manager.send_signal({'action': 'seek', 'info': value})
+
+    def on_slider_pressed(self):
+        self.slider_pressed = True
+
+    def on_slider_released(self):
+        self.slider_pressed = False
+        self.seek(self.ui.playSlider1.value())
 
 
 

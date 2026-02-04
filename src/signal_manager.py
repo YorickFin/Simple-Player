@@ -171,10 +171,10 @@ class SlotManager(QObject):
 
     def update_ui_slider(self, value: int, text: str):
         """在主线程中更新UI"""
+        if self.main_window.slider_pressed:
+            return
         self.main_window.ui.playSlider1.setValue(value)
         self.main_window.ui.playSliderTxt1.setText(text)
-        # self.main_window.ui.playSlider2.setValue(value)
-        # self.main_window.ui.playSliderTxt2.setText(text)
 
     def update_play_slider(self):
         """更新播放进度条"""

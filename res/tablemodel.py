@@ -9,6 +9,12 @@ class TableModel(QAbstractTableModel):
         self._data = data
         self._images = {}
 
+    def update_data(self, new_data):
+        self.beginResetModel()
+        self._data = new_data
+        self._images.clear()
+        self.endResetModel()
+
     def rowCount(self, parent=None):
         return len(self._data)
 
@@ -60,14 +66,17 @@ class RoundedImageDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         if index.column() == 0:
             pixmap = index.data(Qt.DecorationRole)
-            if pixmap and not pixmap.isNull():
+            if pixmap is not None and not pixmap.isNull():
                 painter.save()
                 painter.setRenderHint(QPainter.Antialiasing)
 
                 rect = option.rect
                 pixmap_rect = pixmap.rect()
 
-                x = rect.x() + (rect.width() - pixmap_rect.width()) // 2
+                # 居中
+                # x = rect.x() + (rect.width() - pixmap_rect.width()) // 2
+                # 左对齐
+                x = rect.x() + 6
                 y = rect.y() + (rect.height() - pixmap_rect.height()) // 2
 
                 target_rect = QRectF(x, y, pixmap_rect.width(), pixmap_rect.height())

@@ -179,10 +179,12 @@ class SlotManager(QObject):
         cover_data = audio_info.cover_data
         if not cover_data:
             cover_data = r'res\img\music.png'
-            pixmap = QPixmap(cover_data).scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = QPixmap(cover_data)
         else:
             pixmap = QPixmap()
-            pixmap.loadFromData(cover_data)
+            if not pixmap.loadFromData(cover_data):
+                pixmap = QPixmap(r'res\img\music.png')
+        if not pixmap.isNull():
             pixmap = pixmap.scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.main_window.ui.musicLogoPButton.setIcon(QIcon(create_rounded_pixmap(pixmap, radius=18)))
 

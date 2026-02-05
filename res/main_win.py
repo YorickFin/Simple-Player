@@ -143,17 +143,19 @@ class MainWindow(WindowSuper):
                     self.music_dict[file_stem] = str(music_file)
                     self.data.append([cover_data, file_stem, self.audio_extractor.format_duration(audio_info.duration)])
 
-            self.table_model = TableModel(self.data)
-            self.table_view = self.ui.tableView
-            self.table_view.setModel(self.table_model)
+            if hasattr(self, 'table_model') and self.table_model:
+                self.table_model.update_data(self.data)
+            else:
+                self.table_model = TableModel(self.data)
+                self.table_view = self.ui.tableView
+                self.table_view.setModel(self.table_model)
+                self.table_view.selectionModel().currentChanged.connect(self.on_play)
 
             self.ui.subTabWidget.setEnabled(False)
             self.ui.subTabWidget.setCurrentIndex(0)
             self.ui.subTabWidget.setEnabled(True)
 
             self.resize_table_view()
-
-            self.table_view.selectionModel().currentChanged.connect(self.on_play)
 
 # ########################################## folderListWidget ##########################################
 
@@ -249,17 +251,19 @@ class MainWindow(WindowSuper):
             self.music_dict[file_stem] = str(music_file)
             self.data.append([cover_data, file_stem, self.audio_extractor.format_duration(audio_info.duration)])
 
-        self.table_model = TableModel(self.data)
-        self.table_view = self.ui.tableView
-        self.table_view.setModel(self.table_model)
+        if hasattr(self, 'table_model') and self.table_model:
+            self.table_model.update_data(self.data)
+        else:
+            self.table_model = TableModel(self.data)
+            self.table_view = self.ui.tableView
+            self.table_view.setModel(self.table_model)
+            self.table_view.selectionModel().currentChanged.connect(self.on_play)
 
         self.ui.subTabWidget.setEnabled(False)
         self.ui.subTabWidget.setCurrentIndex(0)
         self.ui.subTabWidget.setEnabled(True)
 
         self.resize_table_view()
-
-        self.table_view.selectionModel().currentChanged.connect(self.on_play)
 
 # ########################################## tableview ##########################################
 

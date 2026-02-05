@@ -44,6 +44,7 @@ class SlotManager(QObject):
         self.current_music = None   # 当前播放音乐
         self.play_list = []         # 播放列表
         self.played_list = []       # 已播放列表
+        self.music_dict = {}        # 名称与路径的映射
         self.player = Player(logger)
 
         self.stop_event = Event()
@@ -74,7 +75,8 @@ class SlotManager(QObject):
         self.main_window.ui.playRButton1.setEnabled(True)
 
         self.stop_current_playback()
-        self.play_list = value['music_list']
+        self.music_dict = value['music_dict']
+        self.play_list = list(value['music_dict'].values())
         self.play_mode = value['play_mode']
         self.play_flag = True
         Thread(target=self.play_mode_control, args=(value['music_path'],)).start()

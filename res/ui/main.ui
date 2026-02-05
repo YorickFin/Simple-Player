@@ -599,7 +599,7 @@ QMenu::item:selected
 	padding-left: 1px
 }</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QHBoxLayout" name="FormLayout">
    <item>
     <widget class="QFrame" name="background">
      <property name="frameShape">

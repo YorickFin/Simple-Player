@@ -622,8 +622,8 @@ class Ui_Form(object):
 "	padding-bottom: -1px;\n"
 "	padding-left: 1px\n"
 "}")
-        self.horizontalLayout = QHBoxLayout(Form)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.FormLayout = QHBoxLayout(Form)
+        self.FormLayout.setObjectName(u"FormLayout")
         self.background = QFrame(Form)
         self.background.setObjectName(u"background")
         self.background.setFrameShape(QFrame.Shape.StyledPanel)
@@ -967,7 +967,7 @@ class Ui_Form(object):
         self.verticalLayout_3.addWidget(self.mainTabWidget)
 
 
-        self.horizontalLayout.addWidget(self.background)
+        self.FormLayout.addWidget(self.background)
 
 
         self.retranslateUi(Form)

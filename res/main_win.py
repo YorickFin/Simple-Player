@@ -1,9 +1,10 @@
 
 import json
+import time
 from PySide6.QtWidgets import (QTableView, QHeaderView, QFileDialog,
                             QMenu, QSlider, QLabel, QWidgetAction)
 from PySide6.QtCore import QTimer, QStandardPaths, QPoint
-from PySide6.QtGui import QAction, QPixmap, QIcon, QCursor, Qt
+from PySide6.QtGui import QAction, QEnterEvent, QPixmap, QIcon, QCursor, Qt
 from pathlib import Path
 from threading import Thread
 
@@ -25,6 +26,8 @@ class MainWindow(WindowSuper):
         self.ui = main_ui.Ui_Form()
         self.ui.setupUi(self)
         self.init_ui()
+        self.init_window_event()
+
         self.replace_music_name_label()
         self.init_config()
 
@@ -73,8 +76,6 @@ class MainWindow(WindowSuper):
         self.ui.playSlider1.sliderReleased.connect(self.on_slider_released)
         # self.ui.playSlider2.sliderReleased.connect(lambda: self.seek(self.ui.playSlider2.value()))
 
-        self.ui.winCloseRButton.clicked.connect(self.close)
-        self.ui.winMiniRButton.clicked.connect(self.showMinimized)
 
 # ########################################## replace_music_name_label ##########################################
 
@@ -306,7 +307,7 @@ class MainWindow(WindowSuper):
         signal_info = {
             'action': 'play_music',
             'music_path': self.music_dict[self.table_model._data[current.row()][1]],
-            'music_list': list(self.music_dict.values()),
+            'music_dict': self.music_dict,
             'play_mode': self.config['play_mode'],
         }
         self.signal_manager.send_signal(signal_info)
@@ -411,11 +412,121 @@ class MainWindow(WindowSuper):
         self.slider_pressed = False
         self.seek(self.ui.playSlider1.value())
 
+# ########################################## window_event ##########################################
+
+    def init_window_event(self):
+        # 扳机初始化
+        self._move_drag = False
+        self._corner_drag = False
+        self._bottom_drag = False
+        self._right_drag = False
+
+        self.double_click_timer = 0.0
+
+        self.ui.winMaxRButton.toggled.connect(self.window_max_min)
+        self.ui.winMiniRButton.clicked.connect(lambda: self.showMinimized())
+        self.ui.winCloseRButton.clicked.connect(self.close_event)
+
+        # 开启鼠标跟踪后，鼠标离开窗口或进入窗口会触发 mouseMoveEvent 事件
+        self.setMouseTracking(True)
+
+        self.ui.background.installEventFilter(self)  # 背景窗口绑定事件过滤器
+
+    def eventFilter(self, obj, event):
+        # 鼠标进入其它控件后还原为标准鼠标样式
+        if isinstance(event, QEnterEvent):
+            self.setCursor(QCursor(Qt.ArrowCursor))
+        return super(MainWindow, self).eventFilter(obj, event)
+
+    def mousePressEvent(self, event):
+        self.double_click_event()
+        if event.button() == Qt.LeftButton and self.ui.winMaxRButton.isChecked() is False:
+            # 鼠标在窗口中的位置
+            self.cursor_win_pos = event.globalPosition() - self.pos()
+            # 窗口宽高
+            self.win_width = self.ui.background.size().width()
+            self.win_height = self.ui.background.size().height()
+
+            # 移动事件
+            if self.cursor_win_pos.x() < self.win_width and self.cursor_win_pos.y() < self.win_height:
+                self._move_drag = True
+
+            # 右下角边界拉伸事件
+            if self.cursor_win_pos.x() > self.win_width - 5 and self.cursor_win_pos.y() > self.win_height - 5:
+                self._corner_drag = True
+
+            # 底部边界拉伸事件
+            if self.cursor_win_pos.x() < self.win_width and self.cursor_win_pos.y() > self.win_height - 5:
+                self._bottom_drag = True
+
+            # 右侧边界拉伸事件
+            if self.cursor_win_pos.x() > self.win_width - 5 and self.cursor_win_pos.y() < self.win_height:
+                self._right_drag = True
+
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self.ui.winMaxRButton.isChecked() is False:
+            # 仅在左键按下时触发移动、拉伸事件
+            if event.buttons() == Qt.LeftButton:
+                # 移动事件
+                if self._move_drag:
+                    move_pos = event.globalPosition() - self.cursor_win_pos
+                    self.move(move_pos.x(), move_pos.y())
+
+                # 右下角边界拉伸事件
+                elif self._corner_drag:
+                    self.resize(event.position().x() + 9, event.position().y() + 9)
+
+                # 底部边界拉伸事件
+                elif self._bottom_drag:
+                    self.resize(self.width(), event.position().y() + 9)
+
+                # 右侧边界拉伸事件
+                elif self._right_drag:
+                    self.resize(event.position().x() + 9, self.height())
 
 
+            # 鼠标在窗口中的位置
+            self.cursor_win_pos = event.globalPosition() - self.pos()
+            # 窗口宽高
+            self.win_width = self.ui.background.size().width()
+            self.win_height = self.ui.background.size().height()
 
+            # 右下光标样式事件
+            if self.cursor_win_pos.x() > self.win_width - 5 and self.cursor_win_pos.y() > self.win_height - 5:
+                self.setCursor(QCursor(Qt.SizeFDiagCursor))
+            # 底部光标样式事件
+            elif self.cursor_win_pos.x() < self.win_width and self.cursor_win_pos.y() > self.win_height - 5:
+                self.setCursor(QCursor(Qt.SizeVerCursor))
+            # 右侧光标样式事件
+            elif self.cursor_win_pos.x() > self.win_width - 5 and self.cursor_win_pos.y() < self.win_height:
+                self.setCursor(QCursor(Qt.SizeHorCursor))
+            else:
+                self.setCursor(QCursor(Qt.ArrowCursor))
 
+            event.accept()
 
+    def mouseReleaseEvent(self, event):
+        self._move_drag = False
+        self._corner_drag = False
+        self._bottom_drag = False
+        self._right_drag = False
+        event.accept()
 
+    def window_max_min(self, state: bool):
+        if state:
+            self.ui.FormLayout.setContentsMargins(0, 0, 0, 0)
+            self.showMaximized()
+        else:
+            self.showNormal()
+            self.ui.FormLayout.setContentsMargins(9, 9, 9, 9)
 
+    def double_click_event(self):
+        if time.time() - self.double_click_timer < 0.35:
+            self.ui.winMaxRButton.setChecked(not self.ui.winMaxRButton.isChecked())
+        self.double_click_timer = time.time()
 
+    def close_event(self):
+        self.ui.winMaxRButton.setChecked(False)
+        self.close()

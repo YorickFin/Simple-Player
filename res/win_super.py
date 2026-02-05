@@ -18,28 +18,24 @@ class WindowSuper(QWidget):
         self.ui.background.setGraphicsEffect(self.shadow)	#为frame设定阴影效果
         self.ui.icon.setPixmap(QPixmap(r"res\logo\logo_P.png"))
 
-        self.init_drag()
-
+        self._move_drag = False
         self.desktop_size = [QApplication.instance().screens()[0].size().width(), QApplication.instance().screens()[0].size().height()]
 
 
 #   --------------------------------------------------移动功能-------------------------------------------------
 
-    def init_drag(self):
-        self._move_drag = False
-        self.m_Position = None
-
     def mousePressEvent(self, event):		#鼠标左键按下时获取鼠标坐标, 按下右键取消
         if event.button() == Qt.LeftButton:
             self._move_drag = True
-            self.m_Position = event.globalPosition() - self.pos()
+            # 鼠标在窗口中的位置
+            self.cursor_win_pos = event.globalPosition() - self.pos()
             event.accept()
 
     def mouseMoveEvent(self, event):	#鼠标在按下左键的情况下移动时, 根据坐标移动界面
         # 移动事件
         if Qt.LeftButton and self._move_drag:
-            m_Point = event.globalPosition() - self.m_Position
-            self.move(m_Point.x(), m_Point.y())
+            move_pos = event.globalPosition() - self.cursor_win_pos
+            self.move(move_pos.x(), move_pos.y())
             event.accept()
 
     def mouseReleaseEvent(self, event):	#鼠标按键释放时, 取消移动

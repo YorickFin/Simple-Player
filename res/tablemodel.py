@@ -1,6 +1,7 @@
 
-from PySide6.QtCore import Qt, QAbstractTableModel
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Qt, QAbstractTableModel, QRectF
+from PySide6.QtGui import QPixmap, QPainter, QPainterPath
+from PySide6.QtWidgets import QStyledItemDelegate
 
 class TableModel(QAbstractTableModel):
     def __init__(self, data):
@@ -50,3 +51,54 @@ class TableModel(QAbstractTableModel):
             if col == 2:
                 return Qt.AlignCenter
             return Qt.AlignVCenter | Qt.AlignLeft
+
+class RoundedImageDelegate(QStyledItemDelegate):
+    def __init__(self, radius=8, parent=None):
+        super().__init__(parent)
+        self.radius = radius
+
+    def paint(self, painter, option, index):
+        if index.column() == 0:
+            pixmap = index.data(Qt.DecorationRole)
+            if pixmap and not pixmap.isNull():
+                painter.save()
+                painter.setRenderHint(QPainter.Antialiasing)
+
+                rect = option.rect
+                pixmap_rect = pixmap.rect()
+
+                x = rect.x() + (rect.width() - pixmap_rect.width()) // 2
+                y = rect.y() + (rect.height() - pixmap_rect.height()) // 2
+
+                target_rect = QRectF(x, y, pixmap_rect.width(), pixmap_rect.height())
+
+                path = QPainterPath()
+                path.addRoundedRect(target_rect, self.radius, self.radius)
+                painter.setClipPath(path)
+                painter.drawPixmap(int(x), int(y), pixmap)
+
+                painter.restore()
+                return
+        super().paint(painter, option, index)
+
+def create_rounded_pixmap(pixmap, radius=8):
+    if pixmap.isNull():
+        return pixmap
+
+    rounded = QPixmap(pixmap.size())
+    rounded.fill(Qt.transparent)
+
+    painter = QPainter(rounded)
+    painter.setRenderHint(QPainter.Antialiasing)
+
+    path = QPainterPath()
+    path.addRoundedRect(QRectF(pixmap.rect()), radius, radius)
+
+    painter.setClipPath(path)
+    painter.drawPixmap(0, 0, pixmap)
+    painter.end()
+
+    return rounded
+
+
+

@@ -10,7 +10,7 @@ from threading import Thread
 
 from res.ui import main_ui
 from res.qrc import main_rc  # noqa: F401
-from res.tablemodel import TableModel
+from res.tablemodel import TableModel, RoundedImageDelegate, create_rounded_pixmap
 from res.win_super import WindowSuper
 from res.marqueelabel import MarqueeLabel
 from src.audio_extract import AudioExtractor
@@ -32,9 +32,11 @@ class MainWindow(WindowSuper):
         self.init_config()
 
         self.ui.background.setStyleSheet("QFrame#background{border-image: url('res/background/bgd.jpg');}")
-        self.ui.musicLogoPushButton.setIcon(QIcon(QPixmap(r'res\img\music.png')))
-        self.textAdaptation(r'res\qss\main.qss', self)
+        default_pixmap = QPixmap(r'res\img\music.png').scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.ui.musicLogoPButton.setIcon(QIcon(create_rounded_pixmap(default_pixmap, radius=18)))
+
         self.windowAdaptation()
+        self.textAdaptation(r'res\qss\main.qss', self)
 
         self.play_num = 0
         self.data = []
@@ -46,7 +48,7 @@ class MainWindow(WindowSuper):
 
         # menuListWidget
         self.ui.subTabWidget.setCurrentIndex(3)
-        self.ui.menuListWidget.currentRowChanged.connect(self.on_menu_change)
+        self.ui.menuListWidget.itemClicked.connect(lambda item: self.on_menu_change(self.ui.menuListWidget.currentRow()))
 
         # folderListWidget
         self.default_option_management()
@@ -276,6 +278,10 @@ class MainWindow(WindowSuper):
 
         # 禁用默认方式列宽调整
         self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+
+        # 设置第0列的图片圆角显示
+        self.rounded_delegate = RoundedImageDelegate(radius=8)
+        self.table_view.setItemDelegateForColumn(0, self.rounded_delegate)
 
     def resize_table_view(self):
         """调整表格视图"""

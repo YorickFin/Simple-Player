@@ -975,7 +975,7 @@ QMenu::item:selected
                   <number>0</number>
                  </property>
                  <item>
-                  <widget class="QPushButton" name="musicLogoPushButton">
+                  <widget class="QPushButton" name="musicLogoPButton">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>

@@ -1,13 +1,14 @@
 
 import random
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QObject, Signal, QTimer
+from PySide6.QtCore import QObject, Signal, QTimer, Qt
 from PySide6.QtGui import QIcon, QPixmap
 from threading import Thread, Event
 from pathlib import Path
 
 from res.main_win import MainWindow
 from res.TrayAction import TrayAction
+from res.tablemodel import create_rounded_pixmap
 from src.player import Player
 from src.audio_extract import AudioExtractor
 
@@ -164,7 +165,7 @@ class SlotManager(QObject):
         self.current_music = None
 
     def set_play_info(self, music_path: str):
-        """设置播放进度条"""
+        """设置播放信息"""
         audio_info = AudioExtractor().extract(music_path, extract_cover=True)
         self.main_window.ui.playSlider1.setRange(0, int(audio_info.duration))
         # self.main_window.ui.playSlider2.setRange(0, int(audio_info.duration))
@@ -178,11 +179,12 @@ class SlotManager(QObject):
         cover_data = audio_info.cover_data
         if not cover_data:
             cover_data = r'res\img\music.png'
-            self.main_window.ui.musicLogoPushButton.setIcon(QIcon(QPixmap(cover_data)))
+            pixmap = QPixmap(cover_data).scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         else:
             pixmap = QPixmap()
             pixmap.loadFromData(cover_data)
-            self.main_window.ui.musicLogoPushButton.setIcon(QIcon(pixmap))
+            pixmap = pixmap.scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.main_window.ui.musicLogoPButton.setIcon(QIcon(create_rounded_pixmap(pixmap, radius=18)))
 
     def update_ui_slider(self, value: int, text: str):
         """在主线程中更新UI"""

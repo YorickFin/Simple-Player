@@ -1,5 +1,6 @@
 
 import random
+import time
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject, Signal, QTimer, Qt
 from PySide6.QtGui import QIcon, QPixmap
@@ -50,6 +51,7 @@ class SlotManager(QObject):
 
         self.stop_event = Event()
         self.slider_timer = None
+        self.timer_last_start = 0.0
 
     def handle_signal(self, value: dict):
         """处理信号"""
@@ -71,10 +73,6 @@ class SlotManager(QObject):
 
     def play_music(self, value: dict):
         """播放"""
-        self.main_window.ui.playRButton1.setEnabled(False)
-        self.main_window.ui.playRButton1.setChecked(True)
-        self.main_window.ui.playRButton1.setEnabled(True)
-
         self.stop_current_playback()
         self.music_dict = value['music_dict']
         self.play_list = list(value['music_dict'].values())
@@ -132,9 +130,20 @@ class SlotManager(QObject):
             self.player.load_audio(music_path)
             self.player.play()
 
+            stuck_count = 0
+            max_stuck = 10
             while self.play_flag and not self.player.is_finished():
                 if self.stop_event.wait(timeout=0.05):
                     break
+                current_time = self.player.get_current_time()
+                if current_time == -1.0:
+                    stuck_count += 1
+                    if stuck_count > max_stuck:
+                        self.logger.warning(f"播放器可能卡住，强制切换下一首: {Path(music_path).name}")
+                        self.player.stop()
+                        break
+                else:
+                    stuck_count = 0
 
             if not self.play_flag:
                 break
@@ -190,17 +199,53 @@ class SlotManager(QObject):
 
     def update_ui_slider(self, value: int, text: str):
         """在主线程中更新UI"""
+        # 检查主窗口是否存在
+        if not self.main_window:
+            self.logger.warning("主窗口不存在，无法更新UI")
+            return
+
+        # 检查滑块是否被按下
         if self.main_window.slider_pressed:
             return
-        self.main_window.ui.playSlider1.setValue(value)
-        self.main_window.ui.playSliderTxt1.setText(text)
+
+        # 检查UI元素是否存在
+        if not hasattr(self.main_window, 'ui'):
+            self.logger.warning("UI对象不存在，无法更新UI")
+            return
+
+        try:
+            # 检查播放滑块是否存在
+            if hasattr(self.main_window.ui, 'playSlider1'):
+                # 更新滑块值
+                self.main_window.ui.playSlider1.setValue(int(value))
+
+            # 检查时间文本标签是否存在
+            if hasattr(self.main_window.ui, 'playSliderTxt1'):
+                # 更新时间文本
+                self.main_window.ui.playSliderTxt1.setText(text)
+
+            # 确保界面可见时强制更新
+            if self.main_window.isVisible():
+                # 强制更新UI
+                self.main_window.ui.playSlider1.update()
+                if hasattr(self.main_window.ui, 'playSliderTxt1'):
+                    self.main_window.ui.playSliderTxt1.update()
+
+        except Exception as e:
+            self.logger.error(f"更新UI滑块时出错: {e}")
 
     def start_slider_timer(self):
         """启动进度条定时器"""
         self.stop_slider_timer()
         self.slider_timer = QTimer()
+        # 设置定时器为单次触发，确保在界面切后台时仍然运行
+        self.slider_timer.setSingleShot(False)
+        # 连接timeout信号到更新方法
         self.slider_timer.timeout.connect(self.update_play_slider)
+        # 启动定时器，间隔1000毫秒
         self.slider_timer.start(1000)
+        # 记录定时器启动时间
+        self.timer_last_start = time.time()
 
     def stop_slider_timer(self):
         """停止进度条定时器"""
@@ -210,15 +255,41 @@ class SlotManager(QObject):
 
     def update_play_slider(self):
         """更新播放进度条"""
+        # 检查播放标志
         if not self.play_flag:
             self.stop_slider_timer()
             return
+
+        # 检查定时器状态，确保定时器正常运行
+        if self.slider_timer and not self.slider_timer.isActive():
+            self.logger.warning("滑块定时器异常停止，正在重启")
+            self.start_slider_timer()
+
+        # 检查定时器是否长时间未启动，可能是界面切后台导致
+        current_time = time.time()
+        if current_time - self.timer_last_start > 60:  # 超过60秒未更新，重新启动定时器
+            self.logger.warning("滑块定时器长时间未更新，正在重启")
+            self.start_slider_timer()
+
+        # 获取当前播放时间
         value = self.player.get_current_time()
+
+        # 如果获取失败，不立即停止定时器，而是继续尝试
         if value == -1.0:
-            self.signal_manager.update_slider_signal.emit(0, '00:00/00:00')
-            self.stop_slider_timer()
+            # 不立即停止定时器，而是等待下次尝试
+            self.logger.debug("获取播放时间失败，继续尝试")
             return
-        text = f'{AudioExtractor().format_duration(value)}/{AudioExtractor().format_duration(self.main_window.ui.playSlider1.maximum())}'
+
+        # 计算总时长
+        total_duration = self.main_window.ui.playSlider1.maximum()
+        if total_duration <= 0:
+            # 如果总时长未设置，尝试从播放器获取
+            total_duration = self.player.get_total_duration() if hasattr(self.player, 'get_total_duration') else 0
+
+        # 格式化时间文本
+        text = f'{AudioExtractor().format_duration(value)}/{AudioExtractor().format_duration(total_duration)}'
+
+        # 发送更新信号
         self.signal_manager.update_slider_signal.emit(value, text)
 
     def open_window(self, value: dict):

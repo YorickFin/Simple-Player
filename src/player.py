@@ -1,3 +1,4 @@
+import time
 from pygame import mixer
 from enum import Enum
 from pathlib import Path
@@ -45,6 +46,8 @@ class Player:
 
         self.status = PlayStatus.STOPPED
         self.seek_offset = 0.0
+        self.last_current_time = 0.0  # 上次成功获取的播放时间
+        self.last_time_update = 0.0  # 上次更新时间的时间戳
 
     def load_audio(self, filepath):
         """
@@ -228,11 +231,73 @@ class Player:
         Returns:
             float: 当前播放时间（秒），如果未播放则返回-1.0
         """
+        # 如果播放器已停止，返回-1.0
         if self.status == PlayStatus.STOPPED:
             return -1.0
-        else:
+
+        # 获取当前时间戳
+        current_time = time.time()
+
+        try:
+            # 尝试从pygame.mixer获取当前播放位置
             pos = self.mixer.music.get_pos()
-            return self.seek_offset + (pos / 1000.0)
+
+            # 如果获取成功（pos != -1）
+            if pos != -1:
+                # 计算当前播放时间
+                current_play_time = self.seek_offset + (pos / 1000.0)
+                # 更新缓存的时间值
+                self.last_current_time = current_play_time
+                # 更新上次更新时间的时间戳
+                self.last_time_update = current_time
+                # 返回计算得到的时间
+                return current_play_time
+            else:
+                # 如果获取失败（pos == -1），使用缓存的时间值
+                # 计算从上一次更新到现在的时间差
+                time_diff = current_time - self.last_time_update
+                # 如果时间差小于60秒（避免长时间暂停后时间跳变）
+                if time_diff < 60:
+                    # 根据播放器状态决定是否递增时间
+                    if self.status == PlayStatus.PLAYING:
+                        # 播放状态下，递增时间
+                        estimated_time = self.last_current_time + time_diff
+                        # 更新上次更新时间的时间戳
+                        self.last_time_update = current_time
+                        # 更新缓存的时间值
+                        self.last_current_time = estimated_time
+                        # 返回估计的时间
+                        return estimated_time
+                    else:
+                        # 暂停或其他状态下，返回缓存的时间
+                        return self.last_current_time
+                else:
+                    # 时间差过大，返回缓存的时间
+                    return self.last_current_time
+
+        except Exception as e:
+            # 发生异常时，使用缓存的时间值
+            self.logger.error(f"获取当前播放时间失败: {e}")
+            # 计算从上一次更新到现在的时间差
+            time_diff = current_time - self.last_time_update
+            # 如果时间差小于60秒
+            if time_diff < 60:
+                # 根据播放器状态决定是否递增时间
+                if self.status == PlayStatus.PLAYING:
+                    # 播放状态下，递增时间
+                    estimated_time = self.last_current_time + time_diff
+                    # 更新上次更新时间的时间戳
+                    self.last_time_update = current_time
+                    # 更新缓存的时间值
+                    self.last_current_time = estimated_time
+                    # 返回估计的时间
+                    return estimated_time
+                else:
+                    # 暂停或其他状态下，返回缓存的时间
+                    return self.last_current_time
+            else:
+                # 时间差过大，返回缓存的时间
+                return self.last_current_time
 
     def seek(self, time_seconds):
         """
@@ -248,9 +313,16 @@ class Player:
             self.mixer.music.set_pos(time_seconds)
             pos = self.mixer.music.get_pos()
             self.seek_offset = time_seconds - (pos / 1000.0)
+            # 更新缓存的时间值
+            self.last_current_time = time_seconds
+            # 更新上次更新时间的时间戳
+            self.last_time_update = time.time()
             self.logger.info(f"跳转到: {time_seconds:.2f}秒")
             return True
         except Exception as e:
+            # 即使跳转失败，也更新缓存的时间值，确保UI显示正确
+            self.last_current_time = time_seconds
+            self.last_time_update = time.time()
             self.logger.error(f"跳转失败: {e}")
             return False
 

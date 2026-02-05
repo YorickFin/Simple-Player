@@ -42,6 +42,7 @@ class MainWindow(WindowSuper):
         self.data = []
         self.music_dict = {}
         self.slider_pressed = False
+        self.last_activity_time = time.time()  # 上次活动时间戳
 
         # tableview
         self.init_tableview()
@@ -312,6 +313,9 @@ class MainWindow(WindowSuper):
         QTimer.singleShot(0, self.resize_table_view)
 
     def on_play(self, current):
+        if not self.ui.playRButton1.isChecked():
+            self.ui.playRButton1.setChecked(True)
+
         self.signal_manager.send_signal({'action': 'clear_played_list'})
 
         signal_info = {
@@ -449,6 +453,9 @@ class MainWindow(WindowSuper):
         return super(MainWindow, self).eventFilter(obj, event)
 
     def mousePressEvent(self, event):
+        # 更新活动时间戳
+        self.update_activity_time()
+
         self.double_click_event()
         if event.button() == Qt.LeftButton and self.ui.winMaxRButton.isChecked() is False:
             # 鼠标在窗口中的位置
@@ -476,6 +483,9 @@ class MainWindow(WindowSuper):
             event.accept()
 
     def mouseMoveEvent(self, event):
+        # 更新活动时间戳
+        self.update_activity_time()
+
         if self.ui.winMaxRButton.isChecked() is False:
             # 仅在左键按下时触发移动、拉伸事件
             if event.buttons() == Qt.LeftButton:
@@ -540,3 +550,69 @@ class MainWindow(WindowSuper):
     def close_event(self):
         self.ui.winMaxRButton.setChecked(False)
         self.close()
+
+    # ########################################## 界面活动检测 ##########################################
+
+    def update_activity_time(self):
+        """更新活动时间戳"""
+        self.last_activity_time = time.time()
+
+    def keyPressEvent(self, event):
+        """键盘按下事件"""
+        super(MainWindow, self).keyPressEvent(event)
+        # 更新活动时间戳
+        self.update_activity_time()
+
+    def showEvent(self, event):
+        """窗口显示事件"""
+        super(MainWindow, self).showEvent(event)
+        # 更新活动时间戳
+        self.update_activity_time()
+        # 当窗口重新显示时，强制更新UI
+        self.force_update_ui()
+
+    def focusInEvent(self, event):
+        """窗口获得焦点事件"""
+        super(MainWindow, self).focusInEvent(event)
+        # 更新活动时间戳
+        self.update_activity_time()
+        # 当窗口获得焦点时，强制更新UI
+        self.force_update_ui()
+
+    def force_update_ui(self):
+        """强制更新UI元素"""
+        self.logger.info("强制更新UI元素")
+
+        try:
+            # 强制更新音乐名称标签
+            if hasattr(self.ui, 'musicNameLabel'):
+                self.ui.musicNameLabel.update()
+                self.ui.musicNameLabel.repaint()
+
+            # 强制更新播放滑块
+            if hasattr(self.ui, 'playSlider1'):
+                self.ui.playSlider1.update()
+                self.ui.playSlider1.repaint()
+
+            # 强制更新时间文本
+            if hasattr(self.ui, 'playSliderTxt1'):
+                self.ui.playSliderTxt1.update()
+                self.ui.playSliderTxt1.repaint()
+
+            # 强制更新整个窗口
+            self.update()
+            self.repaint()
+
+        except Exception as e:
+            self.logger.error(f"强制更新UI时出错: {e}")
+
+    def is_long_time_inactive(self, threshold=60):
+        """检测是否长时间未活动
+
+        Args:
+            threshold (int): 阈值，单位为秒，默认为60秒
+
+        Returns:
+            bool: 是否长时间未活动
+        """
+        return time.time() - self.last_activity_time > threshold

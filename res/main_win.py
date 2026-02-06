@@ -152,11 +152,12 @@ class MainWindow(WindowSuper):
                 self.table_view.setModel(self.table_model)
                 self.table_view.selectionModel().currentChanged.connect(self.on_play)
 
-            self.ui.subTabWidget.setEnabled(False)
+            # 临时阻止 selectionModel 的信号，避免误触发播放
+            self.table_view.selectionModel().blockSignals(True)
             self.ui.subTabWidget.setCurrentIndex(0)
-            self.ui.subTabWidget.setEnabled(True)
+            self.table_view.selectionModel().blockSignals(False)
 
-            self.resize_table_view()
+            QTimer.singleShot(0, self.resize_table_view)
 
 # ########################################## folderListWidget ##########################################
 
@@ -260,11 +261,12 @@ class MainWindow(WindowSuper):
             self.table_view.setModel(self.table_model)
             self.table_view.selectionModel().currentChanged.connect(self.on_play)
 
-        self.ui.subTabWidget.setEnabled(False)
+        # 临时阻止 selectionModel 的信号，避免误触发播放
+        self.table_view.selectionModel().blockSignals(True)
         self.ui.subTabWidget.setCurrentIndex(0)
-        self.ui.subTabWidget.setEnabled(True)
+        self.table_view.selectionModel().blockSignals(False)
 
-        self.resize_table_view()
+        QTimer.singleShot(0, self.resize_table_view)
 
 # ########################################## tableview ##########################################
 
@@ -541,6 +543,7 @@ class MainWindow(WindowSuper):
         else:
             self.showNormal()
             self.ui.FormLayout.setContentsMargins(9, 9, 9, 9)
+            QTimer.singleShot(0, self.resize_table_view)
 
     def double_click_event(self):
         if time.time() - self.double_click_timer < 0.35:

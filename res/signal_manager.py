@@ -280,6 +280,9 @@ class SlotManager(QObject):
             self.logger.debug("获取播放时间失败，继续尝试")
             return
 
+        # 更新定时器最后启动时间，避免频繁重启
+        self.timer_last_start = current_time
+
         # 计算总时长
         total_duration = self.main_window.ui.playSlider1.maximum()
         if total_duration <= 0:

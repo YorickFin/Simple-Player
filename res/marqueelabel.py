@@ -8,7 +8,7 @@ class MarqueeLabel(QLabel):
         self.setFixedWidth(200)
         self.scroll_timer = QTimer(self)
         self.scroll_timer.timeout.connect(self.scroll_text)
-        self.scroll_timer.setInterval(80)
+        self.scroll_timer.setInterval(100)
         self.scroll_offset = 0
         self.scroll_speed = 1
         self.text_content = ""

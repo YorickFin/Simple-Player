@@ -4,7 +4,7 @@
 [![PySide6](https://img.shields.io/badge/PySide6-6.10.1+-green.svg)](https://pypi.org/project/PySide6/)
 [![Pygame](https://img.shields.io/badge/Pygame-2.6.1+-red.svg)](https://pypi.org/project/pygame/)
 [![Mutagen](https://img.shields.io/badge/Mutagen-1.47.0+-orange.svg)](https://pypi.org/project/mutagen/)
-
+[![License](https://img.shields.io/github/license/YorickFin/Simple-Player)](https://github.com/YorickFin/Simple-Player)
 
 一个简洁、美观、功能强大的本地音频播放器，使用 Python 和 PySide6 开发。
 

@@ -150,7 +150,7 @@ class MainWindow(WindowSuper):
                 self.table_model = TableModel(self.data)
                 self.table_view = self.ui.tableView
                 self.table_view.setModel(self.table_model)
-                self.table_view.selectionModel().currentChanged.connect(self.on_play)
+                self.table_view.selectionModel().currentChanged.connect(self.on_play_selection)
 
             # 临时阻止 selectionModel 的信号，避免误触发播放
             self.table_view.selectionModel().blockSignals(True)
@@ -259,7 +259,7 @@ class MainWindow(WindowSuper):
             self.table_model = TableModel(self.data)
             self.table_view = self.ui.tableView
             self.table_view.setModel(self.table_model)
-            self.table_view.selectionModel().currentChanged.connect(self.on_play)
+            self.table_view.selectionModel().currentChanged.connect(self.on_play_selection)
 
         # 临时阻止 selectionModel 的信号，避免误触发播放
         self.table_view.selectionModel().blockSignals(True)
@@ -314,7 +314,7 @@ class MainWindow(WindowSuper):
         super().resizeEvent(event)
         QTimer.singleShot(0, self.resize_table_view)
 
-    def on_play(self, current):
+    def on_play_selection(self, current):
         if not self.ui.playRButton1.isChecked():
             self.ui.playRButton1.setChecked(True)
 

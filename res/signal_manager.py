@@ -91,77 +91,200 @@ class SlotManager(QObject):
 
     def play_control(self, value: dict):
         """播放控制"""
-        if value['info'] == 'resume':
-            self.player.resume()
+        try:
+            info = value.get('info')
 
-        elif value['info'] == 'pause':
-            self.player.pause()
+            if info == 'resume':
+                self.player.resume()
 
-        elif value['info'] == 'pgup':
-            self.stop_current_playback()
-            music_path = self.played_list[-2] if len(self.played_list) > 1 else self.played_list[-1]
-            self.play_flag = True
-            Thread(target=self.play_mode_control, args=(music_path,)).start()
+            elif info == 'pause':
+                self.player.pause()
 
-        elif value['info'] == 'pgdn':
-            self.stop_current_playback()
-            if self.play_mode == 'random_play':
-                music_path = random.choice(self.play_list)
-                while music_path in self.played_list:
-                    music_path = random.choice(self.play_list)
-            else:
-                index = self.play_list.index(self.current_music)
-                if index == len(self.play_list) - 1:
-                    music_path = self.play_list[0]
+            elif info == 'pgup':
+                # 停止当前播放
+                self.stop_current_playback()
+
+                # 确保播放列表不为空
+                if not self.played_list:
+                    self.logger.warning("已播放列表为空，无法切换到上一首")
+                    return
+
+                # 获取上一首音乐路径
+                if len(self.played_list) > 1:
+                    # 移除当前歌曲，获取前一首
+                    self.played_list.pop()
+                    music_path = self.played_list[-1]
                 else:
-                    music_path = self.play_list[index + 1]
-            self.play_flag = True
-            Thread(target=self.play_mode_control, args=(music_path,)).start()
+                    # 如果只有一首，就播放当前这首
+                    music_path = self.played_list[-1]
+
+                # 启动播放线程
+                self.play_flag = True
+                Thread(target=self.play_mode_control, args=(music_path,), daemon=True).start()
+
+            elif info == 'pgdn':
+                # 停止当前播放
+                self.stop_current_playback()
+
+                # 确保播放列表不为空
+                if not self.play_list:
+                    self.logger.warning("播放列表为空，无法切换到下一首")
+                    return
+
+                # 获取下一首音乐路径
+                if self.play_mode == 'random_play':
+                    # 随机播放模式
+                    if len(self.played_list) >= len(self.play_list):
+                        # 如果所有歌曲都已播放，清空已播放列表
+                        self.played_list.clear()
+
+                    # 随机选择一首未播放的歌曲
+                    music_path = random.choice(self.play_list)
+                    retry_count = 0
+                    max_retries = 10
+                    while music_path in self.played_list and retry_count < max_retries:
+                        music_path = random.choice(self.play_list)
+                        retry_count += 1
+                else:
+                    # 顺序播放模式
+                    if not self.current_music:
+                        # 如果当前没有播放歌曲，从第一首开始
+                        music_path = self.play_list[0]
+                    else:
+                        try:
+                            index = self.play_list.index(self.current_music)
+                            if index == len(self.play_list) - 1:
+                                # 如果是最后一首，循环到第一首
+                                music_path = self.play_list[0]
+                            else:
+                                # 否则播放下一首
+                                music_path = self.play_list[index + 1]
+                        except ValueError:
+                            # 如果当前歌曲不在播放列表中，从第一首开始
+                            self.logger.warning(f"当前歌曲不在播放列表中: {self.current_music}")
+                            music_path = self.play_list[0]
+
+                # 启动播放线程
+                self.play_flag = True
+                Thread(target=self.play_mode_control, args=(music_path,), daemon=True).start()
+        except Exception as e:
+            self.logger.error(f"播放控制失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误:\n{traceback.format_exc()}")
 
     def play_mode_control(self, music_path: str):
         """播放模式控制"""
-        while self.play_flag:
-            self.set_play_info(music_path)
-            self.start_timer_signal.emit()
+        try:
+            while self.play_flag:
+                # 设置播放信息
+                self.set_play_info(music_path)
+                # 启动进度条定时器
+                self.start_timer_signal.emit()
 
-            self.current_music = music_path
-            self.played_list.append(music_path)
+                # 更新当前播放信息
+                self.current_music = music_path
+                # 添加到已播放列表
+                self.played_list.append(music_path)
+                # 限制已播放列表长度，避免内存占用过高
+                if len(self.played_list) >= len(self.play_list) or len(self.played_list) > 20:
+                    self.played_list = self.played_list[-3:]
 
-            self.player.load_audio(music_path)
-            self.player.play()
+                # 加载并播放音频
+                if not self.player.load_audio(music_path):
+                    self.logger.error(f"加载音频失败: {music_path}")
+                    # 尝试播放下一首
+                    music_path = self.get_next_music(music_path)
+                    continue
 
-            stuck_count = 0
-            max_stuck = 10
-            while self.play_flag and not self.player.is_finished():
-                if self.stop_event.wait(timeout=0.05):
-                    break
-                current_time = self.player.get_current_time()
-                if current_time == -1.0:
-                    stuck_count += 1
-                    if stuck_count > max_stuck:
-                        self.logger.warning(f"播放器可能卡住，强制切换下一首: {Path(music_path).name}")
-                        self.player.stop()
+                if not self.player.play():
+                    self.logger.error(f"播放失败: {music_path}")
+                    # 尝试播放下一首
+                    music_path = self.get_next_music(music_path)
+                    continue
+
+                # 等待音乐播放完毕或停止
+                stuck_count = 0
+                max_stuck = 10
+                while self.play_flag and not self.player.is_finished():
+                    # 增加超时时间，减少CPU占用
+                    if self.stop_event.wait(timeout=0.2):
+                        # 如果收到停止信号，退出循环
                         break
+
+                    # 每0.2秒检查一次播放状态
+                    current_time = self.player.get_current_time()
+                    if current_time == -1.0:
+                        # 播放时间获取失败，可能是播放器卡住
+                        stuck_count += 1
+                        if stuck_count > max_stuck:
+                            self.logger.warning(f"播放器可能卡住，强制切换下一首: {Path(music_path).name}")
+                            self.player.stop()
+                            break
+                    else:
+                        # 播放正常，重置卡住计数
+                        stuck_count = 0
+
+                # 检查是否需要退出循环
+                if not self.play_flag:
+                    break
+
+                # 根据播放模式获取下一首音乐
+                if self.play_mode == 'loop_one_song':
+                    # 单曲循环模式，继续播放当前歌曲
+                    continue
                 else:
-                    stuck_count = 0
+                    # 获取下一首音乐
+                    music_path = self.get_next_music(music_path)
+                    if not music_path:
+                        # 如果没有下一首音乐，退出循环
+                        self.logger.warning("没有可播放的音乐，退出播放模式")
+                        break
+        except Exception as e:
+            self.logger.error(f"播放模式控制失败: {e}")
+            import traceback
+            self.logger.error(f"详细错误:\n{traceback.format_exc()}")
+        finally:
+            # 确保在异常情况下停止播放器
+            if self.player:
+                self.player.stop()
 
-            if not self.play_flag:
-                break
+    def get_next_music(self, current_music: str):
+        """根据播放模式获取下一首音乐"""
+        try:
+            if not self.play_list:
+                return None
 
-            if self.play_mode == 'loop_one_song':
-                continue
-
-            elif self.play_mode == 'ordered_play':
-                index = self.play_list.index(self.current_music)
-                if index == len(self.play_list) - 1:
-                    music_path = self.play_list[0]
-                else:
-                    music_path = self.play_list[index + 1]
+            if self.play_mode == 'ordered_play':
+                # 顺序播放模式
+                try:
+                    index = self.play_list.index(current_music)
+                    if index == len(self.play_list) - 1:
+                        # 如果是最后一首，循环到第一首
+                        return self.play_list[0]
+                    else:
+                        # 否则播放下一首
+                        return self.play_list[index + 1]
+                except ValueError:
+                    # 如果当前歌曲不在播放列表中，从第一首开始
+                    self.logger.warning(f"当前歌曲不在播放列表中: {current_music}")
+                    return self.play_list[0]
 
             elif self.play_mode == 'random_play':
+                # 随机播放模式
+                if len(self.played_list) >= len(self.play_list):
+                    # 如果所有歌曲都已播放，清理已播放列表，保留最近播放的3首
+                    self.played_list = self.played_list[-3:]
+
+                # 随机选择一首未播放的歌曲
                 music_path = random.choice(self.play_list)
                 while music_path in self.played_list:
                     music_path = random.choice(self.play_list)
+                return music_path
+
+        except Exception as e:
+            self.logger.error(f"获取下一首音乐失败: {e}")
+            # 出错时返回播放列表的第一首
+            return self.play_list[0] if self.play_list else None
 
     def set_play_mode(self, value: dict):
         """设置播放模式"""

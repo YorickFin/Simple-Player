@@ -1,8 +1,6 @@
 {
-    "folder_list": [
-        "E:\\备份\\音乐\\诗歌剧"
-    ],
-    "default_open_folder": "E:\\备份\\音乐",
+    "folder_list": [],
+    "default_open_folder": "",
     "play_mode": "random_play",
     "volume": 50
 }

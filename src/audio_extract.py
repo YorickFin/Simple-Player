@@ -91,7 +91,7 @@ class AudioExtractor:
         try:
             audio = MP3(filepath)
         except Exception:
-            # 如果MP3解析失败，尝试使用通用的ID3
+            # 如果MP3解析失败, 尝试使用通用的ID3
             audio = ID3(filepath)
             info = File(filepath)
             duration = info.info.length if hasattr(info, 'info') else 0
@@ -238,7 +238,7 @@ class AudioExtractor:
         sample_rate = audio.info.sample_rate
         channels = audio.info.channels
 
-        # OGG格式通常不直接嵌入封面，而是通过元数据引用
+        # OGG格式通常不直接嵌入封面, 而是通过元数据引用
         cover_data = None
         cover_mime_type = None
         has_cover = False
@@ -378,7 +378,7 @@ if __name__ == "__main__":
 
     for filepath in sample_files:
         if not os.path.exists(filepath):
-            print(f"文件不存在，跳过: {filepath}")
+            print(f"文件不存在, 跳过: {filepath}")
             continue
 
         try:

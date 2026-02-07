@@ -152,7 +152,7 @@ class MainWindow(WindowSuper):
                 self.table_view.setModel(self.table_model)
                 self.table_view.selectionModel().currentChanged.connect(self.on_play_selection)
 
-            # 临时阻止 selectionModel 的信号，避免误触发播放
+            # 临时阻止 selectionModel 的信号, 避免误触发播放
             self.table_view.selectionModel().blockSignals(True)
             self.ui.subTabWidget.setCurrentIndex(0)
             self.table_view.selectionModel().blockSignals(False)
@@ -261,7 +261,7 @@ class MainWindow(WindowSuper):
             self.table_view.setModel(self.table_model)
             self.table_view.selectionModel().currentChanged.connect(self.on_play_selection)
 
-        # 临时阻止 selectionModel 的信号，避免误触发播放
+        # 临时阻止 selectionModel 的信号, 避免误触发播放
         self.table_view.selectionModel().blockSignals(True)
         self.ui.subTabWidget.setCurrentIndex(0)
         self.table_view.selectionModel().blockSignals(False)
@@ -318,7 +318,7 @@ class MainWindow(WindowSuper):
         if not self.ui.playRButton1.isChecked():
             self.ui.playRButton1.setChecked(True)
 
-        self.signal_manager.send_signal({'action': 'clear_played_list'})
+        self.signal_manager.send_signal({'action': 'clear_play_info'})
 
         signal_info = {
             'action': 'play_music',
@@ -443,7 +443,7 @@ class MainWindow(WindowSuper):
         self.ui.winMiniRButton.clicked.connect(lambda: self.showMinimized())
         self.ui.winCloseRButton.clicked.connect(self.close_event)
 
-        # 开启鼠标跟踪后，鼠标离开窗口或进入窗口会触发 mouseMoveEvent 事件
+        # 开启鼠标跟踪后, 鼠标离开窗口或进入窗口会触发 mouseMoveEvent 事件
         self.setMouseTracking(True)
 
         self.ui.background.installEventFilter(self)  # 背景窗口绑定事件过滤器
@@ -571,7 +571,7 @@ class MainWindow(WindowSuper):
         super(MainWindow, self).showEvent(event)
         # 更新活动时间戳
         self.update_activity_time()
-        # 当窗口重新显示时，强制更新UI
+        # 当窗口重新显示时, 强制更新UI
         self.force_update_ui()
 
     def focusInEvent(self, event):
@@ -579,7 +579,7 @@ class MainWindow(WindowSuper):
         super(MainWindow, self).focusInEvent(event)
         # 更新活动时间戳
         self.update_activity_time()
-        # 当窗口获得焦点时，强制更新UI
+        # 当窗口获得焦点时, 强制更新UI
         self.force_update_ui()
 
     def force_update_ui(self):
@@ -613,7 +613,7 @@ class MainWindow(WindowSuper):
         """检测是否长时间未活动
 
         Args:
-            threshold (int): 阈值，单位为秒，默认为60秒
+            threshold (int): 阈值, 单位为秒, 默认为60秒
 
         Returns:
             bool: 是否长时间未活动

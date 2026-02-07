@@ -41,7 +41,7 @@ class MarqueeLabel(QLabel):
             return
 
         self.scroll_offset += self.scroll_speed
-        # 当文本完全滚动出视野后，重新开始
+        # 当文本完全滚动出视野后, 重新开始
         if self.scroll_offset > self.text_width:
             self.scroll_offset = -self.width()
         self.update()

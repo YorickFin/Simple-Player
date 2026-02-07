@@ -6,6 +6,7 @@ from PySide6.QtCore import QObject, Signal, QTimer, Qt
 from PySide6.QtGui import QIcon, QPixmap
 from threading import Thread, Event
 from pathlib import Path
+from collections import deque
 
 from res.main_win import MainWindow
 from res.TrayAction import TrayAction
@@ -40,13 +41,13 @@ class SlotManager(QObject):
         self.main_window = None
         self.tray_action = None
 
-        self.play_flag = False      # 播放标志
-        self.play_status = None     # 播放状态
-        self.play_mode = None       # 播放模式
-        self.current_music = None   # 当前播放音乐
-        self.play_list = []         # 播放列表
-        self.played_list = []       # 已播放列表
-        self.music_dict = {}        # 名称与路径的映射
+        self.play_flag = False                          # 播放标志
+        self.play_status = None                         # 播放状态
+        self.play_mode = None                           # 播放模式
+        self.current_music = None                       # 当前播放音乐
+        self.play_list = []                             # 播放列表
+        self.played_deque = None                        # 已播放列表
+        self.music_dict = {}                            # 名称与路径的映射
         self.player = Player(logger)
 
         self.stop_event = Event()
@@ -67,7 +68,7 @@ class SlotManager(QObject):
             'play_control': lambda: self.play_control(value),
             'set_play_mode': lambda: self.set_play_mode(value),
             'set_volume': lambda: self.player.set_volume(value['volume']),
-            'clear_played_list': lambda: self.clear_played_list(),
+            'clear_play_info': lambda: self.clear_play_info(),
         }
         branch.get(value.get('action'), lambda: print(f'action not found: {value}'))()
 
@@ -76,6 +77,7 @@ class SlotManager(QObject):
         self.stop_current_playback()
         self.music_dict = value['music_dict']
         self.play_list = list(value['music_dict'].values())
+        self.played_deque = deque(maxlen=min(len(self.play_list) // 2, 10))
         self.play_mode = value['play_mode']
         self.play_flag = True
         Thread(target=self.play_mode_control, args=(value['music_path'],)).start()
@@ -104,19 +106,13 @@ class SlotManager(QObject):
                 # 停止当前播放
                 self.stop_current_playback()
 
-                # 确保播放列表不为空
-                if not self.played_list:
-                    self.logger.warning("已播放列表为空，无法切换到上一首")
-                    return
-
-                # 获取上一首音乐路径
-                if len(self.played_list) > 1:
-                    # 移除当前歌曲，获取前一首
-                    self.played_list.pop()
-                    music_path = self.played_list[-1]
+                # 如果已播放列表为空, 在播放列表里随机选择一首
+                if not self.played_deque or len(self.played_deque) == 1:
+                    music_path = random.choice(self.play_list)
                 else:
-                    # 如果只有一首，就播放当前这首
-                    music_path = self.played_list[-1]
+                    # 获取上一首音乐路径
+                    self.played_deque.pop()
+                    music_path = self.played_deque.pop()
 
                 # 启动播放线程
                 self.play_flag = True
@@ -126,43 +122,27 @@ class SlotManager(QObject):
                 # 停止当前播放
                 self.stop_current_playback()
 
-                # 确保播放列表不为空
-                if not self.play_list:
-                    self.logger.warning("播放列表为空，无法切换到下一首")
-                    return
-
-                # 获取下一首音乐路径
+                # 随机播放模式
                 if self.play_mode == 'random_play':
-                    # 随机播放模式
-                    if len(self.played_list) >= len(self.play_list):
-                        # 如果所有歌曲都已播放，清空已播放列表
-                        self.played_list.clear()
-
                     # 随机选择一首未播放的歌曲
                     music_path = random.choice(self.play_list)
-                    retry_count = 0
-                    max_retries = 10
-                    while music_path in self.played_list and retry_count < max_retries:
+                    while music_path in self.played_deque:
                         music_path = random.choice(self.play_list)
-                        retry_count += 1
+
+                # 顺序播放模式
                 else:
                     # 顺序播放模式
                     if not self.current_music:
-                        # 如果当前没有播放歌曲，从第一首开始
+                        # 如果当前没有播放歌曲, 从第一首开始
                         music_path = self.play_list[0]
                     else:
-                        try:
-                            index = self.play_list.index(self.current_music)
-                            if index == len(self.play_list) - 1:
-                                # 如果是最后一首，循环到第一首
-                                music_path = self.play_list[0]
-                            else:
-                                # 否则播放下一首
-                                music_path = self.play_list[index + 1]
-                        except ValueError:
-                            # 如果当前歌曲不在播放列表中，从第一首开始
-                            self.logger.warning(f"当前歌曲不在播放列表中: {self.current_music}")
+                        index = self.play_list.index(self.current_music)
+                        if index == len(self.play_list) - 1:
+                            # 如果是最后一首, 循环到第一首
                             music_path = self.play_list[0]
+                        else:
+                            # 否则播放下一首
+                            music_path = self.play_list[index + 1]
 
                 # 启动播放线程
                 self.play_flag = True
@@ -183,45 +163,44 @@ class SlotManager(QObject):
 
                 # 更新当前播放信息
                 self.current_music = music_path
-                # 添加到已播放列表
-                self.played_list.append(music_path)
-                # 限制已播放列表长度，避免内存占用过高
-                if len(self.played_list) >= len(self.play_list) or len(self.played_list) > 20:
-                    self.played_list = self.played_list[-3:]
 
-                # 加载并播放音频
+                # 加载音频
                 if not self.player.load_audio(music_path):
                     self.logger.error(f"加载音频失败: {music_path}")
                     # 尝试播放下一首
                     music_path = self.get_next_music(music_path)
                     continue
 
+                # 播放音频
                 if not self.player.play():
                     self.logger.error(f"播放失败: {music_path}")
                     # 尝试播放下一首
                     music_path = self.get_next_music(music_path)
                     continue
 
+                # 添加到已播放列表
+                self.played_deque.append(music_path)
+
                 # 等待音乐播放完毕或停止
                 stuck_count = 0
                 max_stuck = 10
                 while self.play_flag and not self.player.is_finished():
-                    # 增加超时时间，减少CPU占用
+                    # 增加超时时间, 减少CPU占用
                     if self.stop_event.wait(timeout=0.2):
-                        # 如果收到停止信号，退出循环
+                        # 如果收到停止信号, 退出循环
                         break
 
                     # 每0.2秒检查一次播放状态
                     current_time = self.player.get_current_time()
                     if current_time == -1.0:
-                        # 播放时间获取失败，可能是播放器卡住
+                        # 播放时间获取失败, 可能是播放器卡住
                         stuck_count += 1
                         if stuck_count > max_stuck:
-                            self.logger.warning(f"播放器可能卡住，强制切换下一首: {Path(music_path).name}")
+                            self.logger.warning(f"播放器可能卡住, 强制切换下一首: {Path(music_path).name}")
                             self.player.stop()
                             break
                     else:
-                        # 播放正常，重置卡住计数
+                        # 播放正常, 重置卡住计数
                         stuck_count = 0
 
                 # 检查是否需要退出循环
@@ -230,14 +209,14 @@ class SlotManager(QObject):
 
                 # 根据播放模式获取下一首音乐
                 if self.play_mode == 'loop_one_song':
-                    # 单曲循环模式，继续播放当前歌曲
+                    # 单曲循环模式, 继续播放当前歌曲
                     continue
                 else:
                     # 获取下一首音乐
                     music_path = self.get_next_music(music_path)
                     if not music_path:
-                        # 如果没有下一首音乐，退出循环
-                        self.logger.warning("没有可播放的音乐，退出播放模式")
+                        # 如果没有下一首音乐, 退出循环
+                        self.logger.warning("没有可播放的音乐, 退出播放模式")
                         break
         except Exception as e:
             self.logger.error(f"播放模式控制失败: {e}")
@@ -254,30 +233,20 @@ class SlotManager(QObject):
             if not self.play_list:
                 return None
 
+            # 顺序播放模式
             if self.play_mode == 'ordered_play':
-                # 顺序播放模式
-                try:
-                    index = self.play_list.index(current_music)
-                    if index == len(self.play_list) - 1:
-                        # 如果是最后一首，循环到第一首
-                        return self.play_list[0]
-                    else:
-                        # 否则播放下一首
-                        return self.play_list[index + 1]
-                except ValueError:
-                    # 如果当前歌曲不在播放列表中，从第一首开始
-                    self.logger.warning(f"当前歌曲不在播放列表中: {current_music}")
+                index = self.play_list.index(current_music)
+                if index == len(self.play_list) - 1:
+                    # 如果是最后一首, 循环到第一首
                     return self.play_list[0]
+                else:
+                    # 否则播放下一首
+                    return self.play_list[index + 1]
 
+            # 随机播放模式
             elif self.play_mode == 'random_play':
-                # 随机播放模式
-                if len(self.played_list) >= len(self.play_list):
-                    # 如果所有歌曲都已播放，清理已播放列表，保留最近播放的3首
-                    self.played_list = self.played_list[-3:]
-
-                # 随机选择一首未播放的歌曲
                 music_path = random.choice(self.play_list)
-                while music_path in self.played_list:
+                while music_path in self.played_deque:
                     music_path = random.choice(self.play_list)
                 return music_path
 
@@ -290,10 +259,10 @@ class SlotManager(QObject):
         """设置播放模式"""
         self.play_mode = value['play_mode']
 
-    def clear_played_list(self):
+    def clear_play_info(self):
         """清空已播放列表"""
         self.play_list.clear()
-        self.played_list.clear()
+        self.played_deque.clear()
         self.current_music = None
 
     def set_play_info(self, music_path: str):
@@ -324,7 +293,7 @@ class SlotManager(QObject):
         """在主线程中更新UI"""
         # 检查主窗口是否存在
         if not self.main_window:
-            self.logger.warning("主窗口不存在，无法更新UI")
+            self.logger.warning("主窗口不存在, 无法更新UI")
             return
 
         # 检查滑块是否被按下
@@ -333,7 +302,7 @@ class SlotManager(QObject):
 
         # 检查UI元素是否存在
         if not hasattr(self.main_window, 'ui'):
-            self.logger.warning("UI对象不存在，无法更新UI")
+            self.logger.warning("UI对象不存在, 无法更新UI")
             return
 
         try:
@@ -361,11 +330,11 @@ class SlotManager(QObject):
         """启动进度条定时器"""
         self.stop_slider_timer()
         self.slider_timer = QTimer()
-        # 设置定时器为单次触发，确保在界面切后台时仍然运行
+        # 设置定时器为单次触发, 确保在界面切后台时仍然运行
         self.slider_timer.setSingleShot(False)
         # 连接timeout信号到更新方法
         self.slider_timer.timeout.connect(self.update_play_slider)
-        # 启动定时器，间隔1000毫秒
+        # 启动定时器, 间隔1000毫秒
         self.slider_timer.start(1000)
         # 记录定时器启动时间
         self.timer_last_start = time.time()
@@ -383,33 +352,33 @@ class SlotManager(QObject):
             self.stop_slider_timer()
             return
 
-        # 检查定时器状态，确保定时器正常运行
+        # 检查定时器状态, 确保定时器正常运行
         if self.slider_timer and not self.slider_timer.isActive():
-            self.logger.warning("滑块定时器异常停止，正在重启")
+            self.logger.warning("滑块定时器异常停止, 正在重启")
             self.start_slider_timer()
 
-        # 检查定时器是否长时间未启动，可能是界面切后台导致
+        # 检查定时器是否长时间未启动, 可能是界面切后台导致
         current_time = time.time()
-        if current_time - self.timer_last_start > 60:  # 超过60秒未更新，重新启动定时器
-            self.logger.warning("滑块定时器长时间未更新，正在重启")
+        if current_time - self.timer_last_start > 60:  # 超过60秒未更新, 重新启动定时器
+            self.logger.warning("滑块定时器长时间未更新, 正在重启")
             self.start_slider_timer()
 
         # 获取当前播放时间
         value = self.player.get_current_time()
 
-        # 如果获取失败，不立即停止定时器，而是继续尝试
+        # 如果获取失败, 不立即停止定时器, 而是继续尝试
         if value == -1.0:
-            # 不立即停止定时器，而是等待下次尝试
-            self.logger.debug("获取播放时间失败，继续尝试")
+            # 不立即停止定时器, 而是等待下次尝试
+            self.logger.debug("获取播放时间失败, 继续尝试")
             return
 
-        # 更新定时器最后启动时间，避免频繁重启
+        # 更新定时器最后启动时间, 避免频繁重启
         self.timer_last_start = current_time
 
         # 计算总时长
         total_duration = self.main_window.ui.playSlider1.maximum()
         if total_duration <= 0:
-            # 如果总时长未设置，尝试从播放器获取
+            # 如果总时长未设置, 尝试从播放器获取
             total_duration = self.player.get_total_duration() if hasattr(self.player, 'get_total_duration') else 0
 
         # 格式化时间文本

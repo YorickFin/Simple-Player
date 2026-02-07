@@ -59,7 +59,7 @@ class WindowSuper(QWidget):
         win_width = (screen_width / scale_w) + 18
         win_height = (screen_height / scale_h)
 
-        # 计算窗口位置（水平居中，垂直微调）
+        # 计算窗口位置（水平居中, 垂直微调）
         pos_x = (screen_width / 2) - (win_width / 2)
         pos_y = (screen_height / 2) - (win_height / 1.8)
 

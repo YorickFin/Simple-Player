@@ -6,7 +6,7 @@
 [![Mutagen](https://img.shields.io/badge/Mutagen-1.47.0+-orange.svg)](https://pypi.org/project/mutagen/)
 [![License](https://img.shields.io/github/license/YorickFin/Simple-Player)](https://github.com/YorickFin/Simple-Player)
 
-一个简洁、美观、功能强大的本地音频播放器，使用 Python 和 PySide6 开发。
+一个简洁、美观、功能强大的本地音频播放器, 使用 Python 和 PySide6 开发。
 
 ## ✨ 功能特性
 
@@ -16,7 +16,7 @@
 - 📁 **播放列表管理**：添加、删除、清空歌曲
 - 🔄 **多种播放模式**：顺序播放、随机播放、单曲循环
 - 🎨 **美观界面**：现代化的深色主题设计
-- 📱 **系统托盘支持**：最小化到托盘，随时控制
+- 📱 **系统托盘支持**：最小化到托盘, 随时控制
 - 📝 **桌面歌词**：暂未开发
 - 🔍 **音频文件信息**：显示歌曲标题、艺术家等信息
 - 🛠️ **配置管理**：个性化设置保存
@@ -32,7 +32,7 @@ cd simple-player
 
 ### 2. 安装依赖
 
-项目使用 Python 3.13+，依赖包通过 `uv` 安装：
+项目使用 Python 3.13+, 依赖包通过 `uv` 安装：
 
 ```bash
 uv sync
@@ -98,7 +98,7 @@ Simple Player/
 
 ## 📄 许可证
 
-本项目基于 GPL-3.0 许可证开源，欢迎使用与二次开发，详情请参阅 [LICENSE](LICENSE) 文件
+本项目基于 GPL-3.0 许可证开源, 欢迎使用与二次开发, 详情请参阅 [LICENSE](LICENSE) 文件
 
 ## 👨‍💻 开发者
 
@@ -107,4 +107,4 @@ Simple Player/
 
 ---
 
-❤️ 感谢使用 Simple Player！如果您喜欢这个项目，请给它一个 ⭐ 支持一下！
+❤️ 感谢使用 Simple Player！如果您喜欢这个项目, 请给它一个 ⭐ 支持一下！

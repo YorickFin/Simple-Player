@@ -19,7 +19,7 @@ class PlayStatus(Enum):
 
 class Player:
     """
-    音频播放器类，支持播放、暂停、恢复、停止等功能
+    音频播放器类, 支持播放、暂停、恢复、停止等功能
     使用 pygame.mixer 库
     """
 
@@ -101,7 +101,7 @@ class Player:
             except Exception as e:
                 self.logger.warning(f"使用 mutagen 获取时长失败: {e}")
 
-        self.logger.warning("无法获取音频时长，将在播放过程中更新")
+        self.logger.warning("无法获取音频时长, 将在播放过程中更新")
         return 0.0
 
     def play(self, start_time=0):
@@ -119,7 +119,7 @@ class Player:
             return False
 
         if self.filepath is None:
-            self.logger.error("音频未加载，无法播放")
+            self.logger.error("音频未加载, 无法播放")
             return False
 
         try:
@@ -149,7 +149,7 @@ class Player:
             bool: 是否成功暂停
         """
         if self.status != PlayStatus.PLAYING:
-            self.logger.info(f"当前状态为 {self.status.value}，无法暂停")
+            self.logger.info(f"当前状态为 {self.status.value}, 无法暂停")
             return False
 
         try:
@@ -169,7 +169,7 @@ class Player:
             bool: 是否成功恢复
         """
         if self.status != PlayStatus.PAUSED:
-            self.logger.info(f"当前状态为 {self.status.value}，无法恢复")
+            self.logger.info(f"当前状态为 {self.status.value}, 无法恢复")
             return False
 
         try:
@@ -229,9 +229,9 @@ class Player:
         获取当前播放的时间点（秒）
 
         Returns:
-            float: 当前播放时间（秒），如果未播放则返回-1.0
+            float: 当前播放时间（秒）, 如果未播放则返回-1.0
         """
-        # 如果播放器已停止，返回-1.0
+        # 如果播放器已停止, 返回-1.0
         if self.status == PlayStatus.STOPPED:
             return -1.0
 
@@ -253,14 +253,14 @@ class Player:
                 # 返回计算得到的时间
                 return current_play_time
             else:
-                # 如果获取失败（pos == -1），使用缓存的时间值
+                # 如果获取失败（pos == -1）, 使用缓存的时间值
                 # 计算从上一次更新到现在的时间差
                 time_diff = current_time - self.last_time_update
                 # 如果时间差小于60秒（避免长时间暂停后时间跳变）
                 if time_diff < 60:
                     # 根据播放器状态决定是否递增时间
                     if self.status == PlayStatus.PLAYING:
-                        # 播放状态下，递增时间
+                        # 播放状态下, 递增时间
                         estimated_time = self.last_current_time + time_diff
                         # 更新上次更新时间的时间戳
                         self.last_time_update = current_time
@@ -269,14 +269,14 @@ class Player:
                         # 返回估计的时间
                         return estimated_time
                     else:
-                        # 暂停或其他状态下，返回缓存的时间
+                        # 暂停或其他状态下, 返回缓存的时间
                         return self.last_current_time
                 else:
-                    # 时间差过大，返回缓存的时间
+                    # 时间差过大, 返回缓存的时间
                     return self.last_current_time
 
         except Exception as e:
-            # 发生异常时，使用缓存的时间值
+            # 发生异常时, 使用缓存的时间值
             self.logger.error(f"获取当前播放时间失败: {e}")
             # 计算从上一次更新到现在的时间差
             time_diff = current_time - self.last_time_update
@@ -284,7 +284,7 @@ class Player:
             if time_diff < 60:
                 # 根据播放器状态决定是否递增时间
                 if self.status == PlayStatus.PLAYING:
-                    # 播放状态下，递增时间
+                    # 播放状态下, 递增时间
                     estimated_time = self.last_current_time + time_diff
                     # 更新上次更新时间的时间戳
                     self.last_time_update = current_time
@@ -293,10 +293,10 @@ class Player:
                     # 返回估计的时间
                     return estimated_time
                 else:
-                    # 暂停或其他状态下，返回缓存的时间
+                    # 暂停或其他状态下, 返回缓存的时间
                     return self.last_current_time
             else:
-                # 时间差过大，返回缓存的时间
+                # 时间差过大, 返回缓存的时间
                 return self.last_current_time
 
     def seek(self, time_seconds):
@@ -320,7 +320,7 @@ class Player:
             self.logger.info(f"跳转到: {time_seconds:.2f}秒")
             return True
         except Exception as e:
-            # 即使跳转失败，也更新缓存的时间值，确保UI显示正确
+            # 即使跳转失败, 也更新缓存的时间值, 确保UI显示正确
             self.last_current_time = time_seconds
             self.last_time_update = time.time()
             self.logger.error(f"跳转失败: {e}")
@@ -336,7 +336,7 @@ class Player:
         return self.status
 
     def __del__(self):
-        """析构函数，确保资源被释放"""
+        """析构函数, 确保资源被释放"""
         try:
             self.stop()
             self.mixer.quit()

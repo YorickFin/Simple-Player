@@ -1,0 +1,10 @@
+<RCC>
+  <qresource prefix="lock">
+    <file>../img/lock.png</file>
+    <file>../img/locks.png</file>
+  </qresource>
+  <qresource prefix="transparent">
+    <file>../img/transparent.png</file>
+    <file>../img/transparents.png</file>
+  </qresource>
+</RCC>

@@ -1,3 +1,5 @@
+# 打包 pyinstaller z_main-D.spec -y
+
 import sys
 import logging
 from pathlib import Path

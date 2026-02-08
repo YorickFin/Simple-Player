@@ -31,7 +31,15 @@ class MainWindow(WindowSuper):
         self.replace_music_name_label()
         self.init_config()
 
-        self.ui.background.setStyleSheet("QFrame#background{border-image: url('res/background/bgd.jpg');}")
+        self.ui.background.setStyleSheet(
+            """
+            QWidget#mainTab,
+            QWidget#playTab
+            {
+                border-image: url('res/background/bgd.jpg');
+            }
+            """
+        )
         default_pixmap = QPixmap(r'res\img\music.png').scaled(150, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.ui.musicLogoPButton.setIcon(QIcon(create_rounded_pixmap(default_pixmap, radius=18)))
 
@@ -67,6 +75,11 @@ class MainWindow(WindowSuper):
         self.on_volume_changed(self.config['volume'])
         self.ui.volumeControlRButton1.clicked.connect(lambda: self.show_volume_slider(self.ui.volumeControlRButton1))
         # self.ui.volumeControlRButton2.clicked.connect(lambda: self.show_volume_slider(self.ui.volumeControlRButton2))
+
+        # desktop_lyrics
+        self.init_desktop_lyrics()
+        self.ui.desktopLyricsRButton1.toggled.connect(self.desktop_lyrics_control)
+        # self.ui.desktopLyricsRButton2.toggled.connect(self.desktop_lyrics_control)
 
         # play_control
         self.ui.playRButton1.toggled.connect(self.play_control)
@@ -403,6 +416,31 @@ class MainWindow(WindowSuper):
         """保存音量"""
         with open('res/config/config.json', 'w', encoding='utf-8') as f:
             json.dump(self.config, f, ensure_ascii=False, indent=4)
+
+# ########################################## desktop_lyrics ##########################################
+
+    def init_desktop_lyrics(self):
+        self.ui.desktopLyricsRButton1.setChecked(self.config['desktop_lyrics'])
+        # self.ui.desktopLyricsRButton2.setChecked(not self.config['desktop_lyrics'])
+        if self.config['desktop_lyrics']:
+            self.signal_manager.send_signal({'action': 'open_desktop_lyrics'})
+
+    def desktop_lyrics_control(self, checked: bool):
+        self.config['desktop_lyrics'] = checked
+        with open('res/config/config.json', 'w', encoding='utf-8') as f:
+            json.dump(self.config, f, ensure_ascii=False, indent=4)
+
+        with open('res/config/desktop_lyrics.json', 'r', encoding='utf-8') as f:
+            temp = json.load(f)
+        temp['transparent'] = False
+        temp['lock'] = False
+        with open('res/config/desktop_lyrics.json', 'w', encoding='utf-8') as f:
+            json.dump(temp, f, ensure_ascii=False, indent=4)
+
+        if self.config['desktop_lyrics']:
+            self.signal_manager.send_signal({'action': 'open_desktop_lyrics'})
+        else:
+            self.signal_manager.send_signal({'action': 'close_desktop_lyrics'})
 
 # ########################################## play_control ##########################################
 

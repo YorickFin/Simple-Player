@@ -31,6 +31,7 @@ class AudioInfo:
     title: Optional[str] = None  # 标题
     artist: Optional[str] = None  # 艺术家
     album: Optional[str] = None  # 专辑
+    lyrics: Optional[str] = None  # 歌词
 
 
 class AudioExtractor:
@@ -122,6 +123,7 @@ class AudioExtractor:
         title = self._get_tag(audio, 'TIT2', 'title')
         artist = self._get_tag(audio, 'TPE1', 'artist')
         album = self._get_tag(audio, 'TALB', 'album')
+        lyrics = self._get_lyrics_mp3(audio)
 
         return AudioInfo(
             filepath=filepath,
@@ -135,7 +137,8 @@ class AudioExtractor:
             cover_mime_type=cover_mime_type,
             title=title,
             artist=artist,
-            album=album
+            album=album,
+            lyrics=lyrics
         )
 
     def _extract_flac(self, filepath: str, extract_cover: bool) -> AudioInfo:
@@ -165,6 +168,7 @@ class AudioExtractor:
         title = self._get_tag(audio, 'TITLE', 'title')
         artist = self._get_tag(audio, 'ARTIST', 'artist')
         album = self._get_tag(audio, 'ALBUM', 'album')
+        lyrics = self._get_tag(audio, 'LYRICS', 'UNSYNCEDLYRICS')
 
         return AudioInfo(
             filepath=filepath,
@@ -178,7 +182,8 @@ class AudioExtractor:
             cover_mime_type=cover_mime_type,
             title=title,
             artist=artist,
-            album=album
+            album=album,
+            lyrics=lyrics
         )
 
     def _extract_mp4(self, filepath: str, extract_cover: bool) -> AudioInfo:
@@ -205,6 +210,7 @@ class AudioExtractor:
         title = self._get_tag(audio, '\xa9nam', 'title')
         artist = self._get_tag(audio, '\xa9ART', 'artist')
         album = self._get_tag(audio, '\xa9alb', 'album')
+        lyrics = self._get_tag(audio, '\xa9lyr')
 
         return AudioInfo(
             filepath=filepath,
@@ -218,7 +224,8 @@ class AudioExtractor:
             cover_mime_type=cover_mime_type,
             title=title,
             artist=artist,
-            album=album
+            album=album,
+            lyrics=lyrics
         )
 
     def _extract_ogg(self, filepath: str, extract_cover: bool) -> AudioInfo:
@@ -247,6 +254,7 @@ class AudioExtractor:
         title = self._get_tag(audio, 'TITLE', 'title')
         artist = self._get_tag(audio, 'ARTIST', 'artist')
         album = self._get_tag(audio, 'ALBUM', 'album')
+        lyrics = self._get_tag(audio, 'LYRICS')
 
         # 检查是否有封面URL
         if 'METADATA_BLOCK_PICTURE' in audio or 'COVERART' in audio:
@@ -264,7 +272,8 @@ class AudioExtractor:
             cover_mime_type=cover_mime_type,
             title=title,
             artist=artist,
-            album=album
+            album=album,
+            lyrics=lyrics
         )
 
     def _extract_asf(self, filepath: str, extract_cover: bool) -> AudioInfo:
@@ -292,6 +301,7 @@ class AudioExtractor:
         title = self._get_tag(audio, 'Title', 'title')
         artist = self._get_tag(audio, 'Author', 'artist')
         album = self._get_tag(audio, 'WM/AlbumTitle', 'album')
+        lyrics = self._get_tag(audio, 'WM/Lyrics', 'Lyrics')
 
         return AudioInfo(
             filepath=filepath,
@@ -305,7 +315,8 @@ class AudioExtractor:
             cover_mime_type=cover_mime_type,
             title=title,
             artist=artist,
-            album=album
+            album=album,
+            lyrics=lyrics
         )
 
     def _extract_generic(self, filepath: str, extract_cover: bool) -> AudioInfo:
@@ -336,6 +347,17 @@ class AudioExtractor:
             artist=None,
             album=None
         )
+
+    def _get_lyrics_mp3(self, audio) -> Optional[str]:
+        """提取MP3歌词"""
+        if not hasattr(audio, 'tags') or audio.tags is None:
+            return None
+
+        for key, value in audio.tags.items():
+            if key.startswith('USLT') or key.startswith('SYLT'):
+                if hasattr(value, 'text'):
+                    return value.text
+        return None
 
     def _get_tag(self, audio, *possible_keys):
         """从音频文件中获取标签值"""
@@ -395,6 +417,9 @@ if __name__ == "__main__":
             print(f"标题: {audio_info.title or '未知'}")
             print(f"艺术家: {audio_info.artist or '未知'}")
             print(f"专辑: {audio_info.album or '未知'}")
+            print(f"歌词: {'有' if audio_info.lyrics else '无'}")
+            if audio_info.lyrics:
+                print(f"歌词预览: {audio_info.lyrics[:100]}..." if len(audio_info.lyrics) > 100 else f"歌词: {audio_info.lyrics}")
 
         except Exception as e:
             print(f"处理文件时出错 {filepath}: {e}")

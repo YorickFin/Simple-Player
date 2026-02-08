@@ -1,0 +1,97 @@
+
+/************************************ QFrame  ************************************/
+
+
+QFrame#background
+{
+	background-color: #1F2430;
+}
+
+
+
+/************************************ QGraphicsView  ************************************/
+
+QGraphicsView
+{
+	background-color: transparent;
+	border: 0px solid;
+}
+
+
+/************************************ QRadioButton  ************************************/
+
+
+/************/
+
+/*原始*/
+QRadioButton#transparentRButton::indicator:checked
+{
+	border-image: url(:/transparent/img/transparents.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#transparentRButton::indicator:unchecked
+{
+	border-image: url(:/transparent/img/transparent.png);
+	width: 22px;
+	height: 22px;
+}
+
+/*悬停*/
+QRadioButton#transparentRButton::indicator:checked:hover
+{
+	border-image: url(:/transparent/img/transparents.png);
+	width: 22px;
+	height: 22px;
+}
+QRadioButton#transparentRButton::indicator:unchecked:hover
+{
+	border-image: url(:/transparent/img/transparent.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#transparentRButton:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+
+/************/
+
+/*原始*/
+QRadioButton#lockRButton::indicator:checked
+{
+	border-image: url(:/lock/img/locks.png);
+	width: 21px;
+	height: 21px;
+}
+
+QRadioButton#lockRButton::indicator:unchecked
+{
+	border-image: url(:/lock/img/lock.png);
+	width: 21px;
+	height: 21px;
+}
+
+/*悬停*/
+QRadioButton#lockRButton::indicator:checked:hover
+{
+	border-image: url(:/lock/img/locks.png);
+	width: 21px;
+	height: 21px;
+}
+QRadioButton#lockRButton::indicator:unchecked:hover
+{
+	border-image: url(:/lock/img/lock.png);
+	width: 21px;
+	height: 21px;
+}
+
+QRadioButton#lockRButton:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}

@@ -47,4 +47,12 @@
     <file>../img/volume.png</file>
     <file>../img/volumes.png</file>
   </qresource>
+  <qresource prefix="close_desktop_lyrics">
+    <file>../img/close_desktop_lyrics.png</file>
+    <file>../img/close_desktop_lyricss.png</file>
+  </qresource>
+  <qresource prefix="open_desktop_lyrics">
+    <file>../img/open_desktop_lyrics.png</file>
+    <file>../img/open_desktop_lyricss.png</file>
+  </qresource>
 </RCC>

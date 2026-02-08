@@ -34,14 +34,6 @@ class Ui_Form(object):
 "}\n"
 "\n"
 "\n"
-"/************************************ QFrame ************************************/\n"
-"\n"
-"QFrame#background\n"
-"{\n"
-"	background-color: #2F3648;\n"
-"}\n"
-"\n"
-"\n"
 "/************************************ QPushButton  ************************************/\n"
 "\n"
 "/*\u539f\u59cb*/\n"
@@ -79,8 +71,7 @@ class Ui_Form(object):
 "QListWidget\n"
 "{\n"
 "	background-color: transparent;\n"
-"	bor"
-                        "der-radius: 0px;\n"
+"	border-radius: 0px;\n"
 "	outline: 0px;\n"
 "	font-size: 14pt;\n"
 "}\n"
@@ -90,7 +81,8 @@ class Ui_Form(object):
 "{\n"
 "	padding-top: 5px;\n"
 "	padding-bottom: 5px;\n"
-"	margin-top: 5px;\n"
+""
+                        "	margin-top: 5px;\n"
 "	margin-bottom: 5px;\n"
 "	margin-left: 5px;\n"
 "	margin-right: 5px;\n"
@@ -122,7 +114,7 @@ class Ui_Form(object):
 "/*\u539f\u59cb*/\n"
 "QTabWidget\n"
 "{\n"
-"	background-color: transparent;\n"
+"	background-color: #2F3648;\n"
 "}\n"
 "\n"
 "\n"
@@ -138,8 +130,7 @@ class Ui_Form(object):
 "    left: 0px;\n"
 "}\n"
 "\n"
-"QTab"
-                        "Bar::tab\n"
+"QTabBar::tab\n"
 "{\n"
 "    color: white;\n"
 "    border: 0px solid;\n"
@@ -149,7 +140,8 @@ class Ui_Form(object):
 "QTabBar::tab:selected\n"
 "{\n"
 "    min-height: 0px;\n"
-"    color: white;\n"
+"    color: white;"
+                        "\n"
 "    border: 0px solid;\n"
 "    border-bottom: 0px solid;\n"
 "}\n"
@@ -182,15 +174,15 @@ class Ui_Form(object):
 "{\n"
 "    border: none;\n"
 "    margin: 0px;\n"
-"  "
-                        "  padding: 0px;\n"
+"    padding: 0px;\n"
 "    outline: none;\n"
 "}\n"
 "\n"
 "/* \u786e\u4fdd\u9009\u4e2d\u884c\u6ca1\u6709\u5185\u90e8\u5206\u9694 */\n"
 "QTableView::item:selected\n"
 "{\n"
-"    border-left: none;\n"
+"    bord"
+                        "er-left: none;\n"
 "    border-right: none;\n"
 "    border-top: none;\n"
 "    border-bottom: none;\n"
@@ -229,15 +221,15 @@ class Ui_Form(object):
 "QRadioButton#winMiniRButton::indicator:checked:hover\n"
 "{\n"
 "	border-image: url(:/min/img/minis.png);\n"
-"	w"
-                        "idth: 15px;\n"
+"	width: 15px;\n"
 "	height: 15px;\n"
 "}\n"
 "QRadioButton#winMiniRButton::indicator:unchecked:hover\n"
 "{\n"
 "	border-image: url(:/min/img/minis.png);\n"
 "	width: 15px;\n"
-"	height: 15px;\n"
+"	heigh"
+                        "t: 15px;\n"
 "}\n"
 "\n"
 "QRadioButton#winMiniRButton:pressed\n"
@@ -279,8 +271,7 @@ class Ui_Form(object):
 "\n"
 "QRadioButton#winMaxRButton:pressed\n"
 "{\n"
-"	pa"
-                        "dding-bottom: -2px;\n"
+"	padding-bottom: -2px;\n"
 "	padding-left: 1px\n"
 "}\n"
 "\n"
@@ -289,7 +280,8 @@ class Ui_Form(object):
 "/*\u539f\u59cb*/\n"
 "QRadioButton#winCloseRButton::indicator:checked\n"
 "{\n"
-"	border-image: url(:/close/img/close.png);\n"
+"	border-image:"
+                        " url(:/close/img/close.png);\n"
 "	width: 15px;\n"
 "	height: 15px;\n"
 "}\n"
@@ -327,14 +319,14 @@ class Ui_Form(object):
 "QRadioButton#playRButton1::indicator:checked,\n"
 "QRadioButton#playRButton2::indicator:checked\n"
 "{\n"
-"	border-image: url"
-                        "(:/pause/img/pause.png);\n"
+"	border-image: url(:/pause/img/pause.png);\n"
 "	width: 22px;\n"
 "	height: 22px;\n"
 "}\n"
 "\n"
 "QRadioButton#playRButton1::indicator:unchecked,\n"
-"QRadioButton#playRButton2::indicator:unchecked\n"
+"QRadioButton#playRButton2::indicator:unchecked"
+                        "\n"
 "{\n"
 "	border-image: url(:/play/img/play.png);\n"
 "	width: 22px;\n"
@@ -370,14 +362,14 @@ class Ui_Form(object):
 "QRadioButton#pgupRButton1::indicator:checked,\n"
 "QRadioButton#pgupRButton2::indicator:checked\n"
 "{\n"
-"	border-"
-                        "image: url(:/pgup/img/pgup.png);\n"
+"	border-image: url(:/pgup/img/pgup.png);\n"
 "	width: 22px;\n"
 "	height: 22px;\n"
 "}\n"
 "\n"
 "QRadioButton#pgupRButton1::indicator:unchecked,\n"
-"QRadioButton#pgupRButton2::indicator:unchecked\n"
+"QRadioButton#pgupRButton2::indicator:u"
+                        "nchecked\n"
 "{\n"
 "	border-image: url(:/pgup/img/pgup.png);\n"
 "	width: 22px;\n"
@@ -413,14 +405,14 @@ class Ui_Form(object):
 "QRadioButton#pgdnRButton1::indicator:checked,\n"
 "QRadioButton#pgdnRButton2::indicator:checked\n"
 "{\n"
-"	b"
-                        "order-image: url(:/pgdn/img/pgdn.png);\n"
+"	border-image: url(:/pgdn/img/pgdn.png);\n"
 "	width: 22px;\n"
 "	height: 22px;\n"
 "}\n"
 "\n"
 "QRadioButton#pgdnRButton1::indicator:unchecked,\n"
-"QRadioButton#pgdnRButton2::indicator:unchecked\n"
+"QRadioButton#pgdnRButton2::indic"
+                        "ator:unchecked\n"
 "{\n"
 "	border-image: url(:/pgdn/img/pgdn.png);\n"
 "	width: 22px;\n"
@@ -454,15 +446,15 @@ class Ui_Form(object):
 "\n"
 "/*\u539f\u59cb*/\n"
 "QRadioButton#volumeControlRButton1::indicator:checked,\n"
-"QRadioButton#volumeControlRButton2::indica"
-                        "tor:checked\n"
+"QRadioButton#volumeControlRButton2::indicator:checked\n"
 "{\n"
 "	border-image: url(:/volume/img/volume.png);\n"
 "	width: 22px;\n"
 "	height: 22px;\n"
 "}\n"
 "\n"
-"QRadioButton#volumeControlRButton1::indicator:unchecked,\n"
+"QRadioButton#volumeControlRButton1::indicator:unchecked,"
+                        "\n"
 "QRadioButton#volumeControlRButton2::indicator:unchecked\n"
 "{\n"
 "	border-image: url(:/volume/img/volume.png);\n"
@@ -493,9 +485,52 @@ class Ui_Form(object):
 "	padding-left: 1px\n"
 "}\n"
 "\n"
+"/************/\n"
 "\n"
-"/****************************"
-                        "******** QSlider ************************************/\n"
+"/*\u539f\u59cb*/\n"
+"QRadioButton#desktopLyricsRButton1::indicator:checked,\n"
+"QRadioButton#desktopLyricsRButton1::indicator:checked\n"
+"{\n"
+"	border-image: url(:/close_desktop_lyrics"
+                        "/img/close_desktop_lyrics.png);\n"
+"	width: 22px;\n"
+"	height: 22px;\n"
+"}\n"
+"\n"
+"QRadioButton#desktopLyricsRButton1::indicator:unchecked,\n"
+"QRadioButton#desktopLyricsRButton2::indicator:unchecked\n"
+"{\n"
+"	border-image: url(:/open_desktop_lyrics/img/open_desktop_lyrics.png);\n"
+"	width: 22px;\n"
+"	height: 22px;\n"
+"}\n"
+"\n"
+"/*\u60ac\u505c*/\n"
+"QRadioButton#desktopLyricsRButton1::indicator:checked:hover,\n"
+"QRadioButton#desktopLyricsRButton2::indicator:checked:hover\n"
+"{\n"
+"	border-image: url(:/close_desktop_lyrics/img/close_desktop_lyricss.png);\n"
+"	width: 22px;\n"
+"	height: 22px;\n"
+"}\n"
+"QRadioButton#desktopLyricsRButton1::indicator:unchecked:hover,\n"
+"QRadioButton#desktopLyricsRButton2::indicator:unchecked:hover\n"
+"{\n"
+"	border-image: url(:/open_desktop_lyrics/img/open_desktop_lyricss.png);\n"
+"	width: 22px;\n"
+"	height: 22px;\n"
+"}\n"
+"\n"
+"QRadioButton#desktopLyricsRButton1:pressed,\n"
+"QRadioButton#desktopLyricsRButton2:pressed\n"
+"{\n"
+"	padding-bottom: -2px;\n"
+"	padding-left: 1px\n"
+""
+                        "}\n"
+"\n"
+"\n"
+"/************************************ QSlider ************************************/\n"
 "\n"
 "QSlider::handle:horizontal {\n"
 "    background: #82d7dc;\n"
@@ -533,11 +568,11 @@ class Ui_Form(object):
 "    border: 1px solid;\n"
 "    width: 3px;  /* \u5c06height\u6539\u4e3awidth */\n"
 "    border-radius: 2px;\n"
-"}\n"
+"}"
+                        "\n"
 "\n"
 "QSlider::add-page:vertical {\n"
-"  "
-                        "  background: #dc82d7;\n"
+"    background: #dc82d7;\n"
 "    border-radius: 2px;\n"
 "}\n"
 "\n"
@@ -584,10 +619,10 @@ class Ui_Form(object):
 "	width: 0px;\n"
 "}\n"
 "\n"
-"/*\u6ed1\u5757\u5df2\u7ecf\u7ecf\u8fc7\u7684\u6ed1\u8f68\u533a\u57df\u7684\u989c\u8272*/\n"
+"/*\u6ed1\u5757\u5df2\u7ecf\u7ecf\u8fc7\u7684\u6ed1\u8f68\u533a\u57df\u7684\u989c"
+                        "\u8272*/\n"
 "QScrollBar::add-page:vertical\n"
-""
-                        "{\n"
+"{\n"
 "    background-color: transparent;\n"
 "}\n"
 "\n"
@@ -624,17 +659,17 @@ class Ui_Form(object):
 "}")
         self.FormLayout = QHBoxLayout(Form)
         self.FormLayout.setObjectName(u"FormLayout")
-        self.background = QFrame(Form)
+        self.background = QTabWidget(Form)
         self.background.setObjectName(u"background")
-        self.background.setFrameShape(QFrame.Shape.StyledPanel)
-        self.background.setFrameShadow(QFrame.Shadow.Raised)
-        self.verticalLayout_3 = QVBoxLayout(self.background)
+        self.mainTab = QWidget()
+        self.mainTab.setObjectName(u"mainTab")
+        self.verticalLayout_3 = QVBoxLayout(self.mainTab)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.verticalLayout_3.setContentsMargins(6, 4, 6, 6)
+        self.verticalLayout_3.setContentsMargins(0, 3, 0, 0)
         self.horizontalLayout_1 = QHBoxLayout()
         self.horizontalLayout_1.setSpacing(0)
         self.horizontalLayout_1.setObjectName(u"horizontalLayout_1")
-        self.icon = QLabel(self.background)
+        self.icon = QLabel(self.mainTab)
         self.icon.setObjectName(u"icon")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         sizePolicy.setHorizontalStretch(0)
@@ -652,7 +687,7 @@ class Ui_Form(object):
 
         self.horizontalLayout_1.addItem(self.horizontalSpacer_8)
 
-        self.label = QLabel(self.background)
+        self.label = QLabel(self.mainTab)
         self.label.setObjectName(u"label")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
@@ -669,11 +704,11 @@ class Ui_Form(object):
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setSpacing(20)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.winMiniRButton = QRadioButton(self.background)
-        self.winBarGroup = QButtonGroup(Form)
-        self.winBarGroup.setObjectName(u"winBarGroup")
-        self.winBarGroup.setExclusive(False)
-        self.winBarGroup.addButton(self.winMiniRButton)
+        self.winMiniRButton = QRadioButton(self.mainTab)
+        self.RButtonGroup = QButtonGroup(Form)
+        self.RButtonGroup.setObjectName(u"RButtonGroup")
+        self.RButtonGroup.setExclusive(False)
+        self.RButtonGroup.addButton(self.winMiniRButton)
         self.winMiniRButton.setObjectName(u"winMiniRButton")
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
         sizePolicy2.setHorizontalStretch(0)
@@ -685,8 +720,8 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.winMiniRButton)
 
-        self.winMaxRButton = QRadioButton(self.background)
-        self.winBarGroup.addButton(self.winMaxRButton)
+        self.winMaxRButton = QRadioButton(self.mainTab)
+        self.RButtonGroup.addButton(self.winMaxRButton)
         self.winMaxRButton.setObjectName(u"winMaxRButton")
         sizePolicy2.setHeightForWidth(self.winMaxRButton.sizePolicy().hasHeightForWidth())
         self.winMaxRButton.setSizePolicy(sizePolicy2)
@@ -696,8 +731,8 @@ class Ui_Form(object):
 
         self.horizontalLayout_2.addWidget(self.winMaxRButton)
 
-        self.winCloseRButton = QRadioButton(self.background)
-        self.winBarGroup.addButton(self.winCloseRButton)
+        self.winCloseRButton = QRadioButton(self.mainTab)
+        self.RButtonGroup.addButton(self.winCloseRButton)
         self.winCloseRButton.setObjectName(u"winCloseRButton")
         sizePolicy2.setHeightForWidth(self.winCloseRButton.sizePolicy().hasHeightForWidth())
         self.winCloseRButton.setSizePolicy(sizePolicy2)
@@ -712,17 +747,9 @@ class Ui_Form(object):
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_1)
 
-        self.mainTabWidget = QTabWidget(self.background)
-        self.mainTabWidget.setObjectName(u"mainTabWidget")
-        self.mainTab = QWidget()
-        self.mainTab.setObjectName(u"mainTab")
-        self.verticalLayout_5 = QVBoxLayout(self.mainTab)
-        self.verticalLayout_5.setSpacing(0)
-        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.verticalSpacer_2 = QSpacerItem(0, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        self.verticalSpacer = QSpacerItem(0, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
-        self.verticalLayout_5.addItem(self.verticalSpacer_2)
+        self.verticalLayout_3.addItem(self.verticalSpacer)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setSpacing(0)
@@ -868,7 +895,7 @@ class Ui_Form(object):
         self.horizontalLayout_4.addItem(self.horizontalSpacer_2)
 
         self.pgupRButton1 = QRadioButton(self.musicInfoBGFrame)
-        self.winBarGroup.addButton(self.pgupRButton1)
+        self.RButtonGroup.addButton(self.pgupRButton1)
         self.pgupRButton1.setObjectName(u"pgupRButton1")
         sizePolicy1.setHeightForWidth(self.pgupRButton1.sizePolicy().hasHeightForWidth())
         self.pgupRButton1.setSizePolicy(sizePolicy1)
@@ -881,7 +908,7 @@ class Ui_Form(object):
         self.horizontalLayout_4.addItem(self.horizontalSpacer_4)
 
         self.playRButton1 = QRadioButton(self.musicInfoBGFrame)
-        self.winBarGroup.addButton(self.playRButton1)
+        self.RButtonGroup.addButton(self.playRButton1)
         self.playRButton1.setObjectName(u"playRButton1")
         sizePolicy1.setHeightForWidth(self.playRButton1.sizePolicy().hasHeightForWidth())
         self.playRButton1.setSizePolicy(sizePolicy1)
@@ -894,7 +921,7 @@ class Ui_Form(object):
         self.horizontalLayout_4.addItem(self.horizontalSpacer_5)
 
         self.pgdnRButton1 = QRadioButton(self.musicInfoBGFrame)
-        self.winBarGroup.addButton(self.pgdnRButton1)
+        self.RButtonGroup.addButton(self.pgdnRButton1)
         self.pgdnRButton1.setObjectName(u"pgdnRButton1")
         sizePolicy1.setHeightForWidth(self.pgdnRButton1.sizePolicy().hasHeightForWidth())
         self.pgdnRButton1.setSizePolicy(sizePolicy1)
@@ -910,16 +937,27 @@ class Ui_Form(object):
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_15)
 
+        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_4.addItem(self.horizontalSpacer_17)
+
         self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_14)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.desktopLyricsRButton1 = QRadioButton(self.musicInfoBGFrame)
+        self.RButtonGroup.addButton(self.desktopLyricsRButton1)
+        self.desktopLyricsRButton1.setObjectName(u"desktopLyricsRButton1")
+        self.desktopLyricsRButton1.setMinimumSize(QSize(26, 26))
+
+        self.horizontalLayout_4.addWidget(self.desktopLyricsRButton1)
+
+        self.horizontalSpacer_3 = QSpacerItem(30, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_3)
 
         self.playModeRButton1 = QRadioButton(self.musicInfoBGFrame)
-        self.winBarGroup.addButton(self.playModeRButton1)
+        self.RButtonGroup.addButton(self.playModeRButton1)
         self.playModeRButton1.setObjectName(u"playModeRButton1")
         sizePolicy1.setHeightForWidth(self.playModeRButton1.sizePolicy().hasHeightForWidth())
         self.playModeRButton1.setSizePolicy(sizePolicy1)
@@ -927,12 +965,12 @@ class Ui_Form(object):
 
         self.horizontalLayout_4.addWidget(self.playModeRButton1)
 
-        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer_9 = QSpacerItem(30, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout_4.addItem(self.horizontalSpacer_9)
 
         self.volumeControlRButton1 = QRadioButton(self.musicInfoBGFrame)
-        self.winBarGroup.addButton(self.volumeControlRButton1)
+        self.RButtonGroup.addButton(self.volumeControlRButton1)
         self.volumeControlRButton1.setObjectName(u"volumeControlRButton1")
         sizePolicy1.setHeightForWidth(self.volumeControlRButton1.sizePolicy().hasHeightForWidth())
         self.volumeControlRButton1.setSizePolicy(sizePolicy1)
@@ -957,21 +995,19 @@ class Ui_Form(object):
         self.horizontalLayout_3.addLayout(self.verticalLayout_2)
 
 
-        self.verticalLayout_5.addLayout(self.horizontalLayout_3)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_3)
 
-        self.mainTabWidget.addTab(self.mainTab, "")
+        self.background.addTab(self.mainTab, "")
         self.playTab = QWidget()
         self.playTab.setObjectName(u"playTab")
-        self.mainTabWidget.addTab(self.playTab, "")
-
-        self.verticalLayout_3.addWidget(self.mainTabWidget)
-
+        self.background.addTab(self.playTab, "")
 
         self.FormLayout.addWidget(self.background)
 
 
         self.retranslateUi(Form)
 
+        self.background.setCurrentIndex(0)
         self.subTabWidget.setCurrentIndex(1)
 
 
@@ -1012,9 +1048,10 @@ class Ui_Form(object):
         self.pgupRButton1.setText("")
         self.playRButton1.setText("")
         self.pgdnRButton1.setText("")
+        self.desktopLyricsRButton1.setText("")
         self.playModeRButton1.setText("")
         self.volumeControlRButton1.setText("")
-        self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.mainTab), "")
-        self.mainTabWidget.setTabText(self.mainTabWidget.indexOf(self.playTab), "")
+        self.background.setTabText(self.background.indexOf(self.mainTab), "")
+        self.background.setTabText(self.background.indexOf(self.playTab), "")
     # retranslateUi
 

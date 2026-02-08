@@ -6,14 +6,6 @@
 }
 
 
-/************************************ QFrame ************************************/
-
-QFrame#background
-{
-	background-color: #2F3648;
-}
-
-
 /************************************ QPushButton  ************************************/
 
 /*原始*/
@@ -93,7 +85,7 @@ QListWidget::item:selected:!active
 /*原始*/
 QTabWidget
 {
-	background-color: transparent;
+	background-color: #2F3648;
 }
 
 
@@ -451,6 +443,48 @@ QRadioButton#volumeControlRButton2::indicator:unchecked:hover
 
 QRadioButton#volumeControlRButton1:pressed,
 QRadioButton#volumeControlRButton2:pressed
+{
+	padding-bottom: -2px;
+	padding-left: 1px
+}
+
+/************/
+
+/*原始*/
+QRadioButton#desktopLyricsRButton1::indicator:checked,
+QRadioButton#desktopLyricsRButton1::indicator:checked
+{
+	border-image: url(:/close_desktop_lyrics/img/close_desktop_lyrics.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#desktopLyricsRButton1::indicator:unchecked,
+QRadioButton#desktopLyricsRButton2::indicator:unchecked
+{
+	border-image: url(:/open_desktop_lyrics/img/open_desktop_lyrics.png);
+	width: 22px;
+	height: 22px;
+}
+
+/*悬停*/
+QRadioButton#desktopLyricsRButton1::indicator:checked:hover,
+QRadioButton#desktopLyricsRButton2::indicator:checked:hover
+{
+	border-image: url(:/close_desktop_lyrics/img/close_desktop_lyricss.png);
+	width: 22px;
+	height: 22px;
+}
+QRadioButton#desktopLyricsRButton1::indicator:unchecked:hover,
+QRadioButton#desktopLyricsRButton2::indicator:unchecked:hover
+{
+	border-image: url(:/open_desktop_lyrics/img/open_desktop_lyricss.png);
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton#desktopLyricsRButton1:pressed,
+QRadioButton#desktopLyricsRButton2:pressed
 {
 	padding-bottom: -2px;
 	padding-left: 1px

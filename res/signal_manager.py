@@ -13,6 +13,9 @@ from res.TrayAction import TrayAction
 from res.tablemodel import create_rounded_pixmap
 from src.player import Player
 from src.audio_extract import AudioExtractor
+from res.lyrics_win import LyricsWindow
+
+
 
 class SignalManager(QObject):
     """信号管理器"""
@@ -31,6 +34,8 @@ class SlotManager(QObject):
     update_slider_signal = Signal(int, str)
     play_finished_signal = Signal()
     start_timer_signal = Signal()
+    update_desktop_lyrics_signal = Signal(str)
+    sync_desktop_lyrics_signal = Signal(float)
 
     def __init__(self, logger):
         super().__init__()
@@ -39,6 +44,7 @@ class SlotManager(QObject):
         self.signal_manager = None
 
         self.main_window = None
+        self.lyric_window = None
         self.tray_action = None
 
         self.play_flag = False                          # 播放标志
@@ -69,6 +75,8 @@ class SlotManager(QObject):
             'set_play_mode': lambda: self.set_play_mode(value),
             'set_volume': lambda: self.player.set_volume(value['volume']),
             'clear_play_info': lambda: self.clear_play_info(),
+            'open_desktop_lyrics': lambda: self.open_desktop_lyrics(),
+            'close_desktop_lyrics': lambda: self.close_desktop_lyrics(),
         }
         branch.get(value.get('action'), lambda: print(f'action not found: {value}'))()
 
@@ -156,13 +164,6 @@ class SlotManager(QObject):
         """播放模式控制"""
         try:
             while self.play_flag:
-                # 设置播放信息
-                self.set_play_info(music_path)
-                # 启动进度条定时器
-                self.start_timer_signal.emit()
-
-                # 更新当前播放信息
-                self.current_music = music_path
 
                 # 加载音频
                 if not self.player.load_audio(music_path):
@@ -178,8 +179,19 @@ class SlotManager(QObject):
                     music_path = self.get_next_music(music_path)
                     continue
 
+                # 设置播放信息
+                self.set_play_info(music_path)
+                # 启动进度条定时器
+                self.start_timer_signal.emit()
+
+                # 更新当前播放信息
+                self.current_music = music_path
+
                 # 添加到已播放列表
                 self.played_deque.append(music_path)
+
+                # 更新桌面歌词
+                self.update_desktop_lyrics(music_path)
 
                 # 等待音乐播放完毕或停止
                 stuck_count = 0
@@ -262,8 +274,9 @@ class SlotManager(QObject):
     def clear_play_info(self):
         """清空已播放列表"""
         self.play_list.clear()
-        self.played_deque.clear()
         self.current_music = None
+        if self.played_deque is not None:
+            self.played_deque.clear()
 
     def set_play_info(self, music_path: str):
         """设置播放信息"""
@@ -387,6 +400,62 @@ class SlotManager(QObject):
         # 发送更新信号
         self.signal_manager.update_slider_signal.emit(value, text)
 
+        # 同步桌面歌词
+        self.sync_desktop_lyrics(value)
+
+    def update_music_name(self, music_name: str):
+        """在主线程中更新音乐名称"""
+        self.main_window.ui.musicNameLabel.setText(music_name)
+
+    def open_desktop_lyrics(self):
+        """打开桌面歌词窗口"""
+        self.lyric_window = LyricsWindow(self.signal_manager, self.logger)
+        self.lyric_window.show()
+
+        self.lyric_window.set_lyric_offset(0.5)
+
+        if self.current_music:
+            self.update_desktop_lyrics(self.current_music)
+            current_time = self.player.get_current_time()
+            if current_time >= 0:
+                self.sync_desktop_lyrics(current_time)
+
+    def close_desktop_lyrics(self):
+        """关闭桌面歌词窗口"""
+        self.lyric_window.close()
+
+    def update_desktop_lyrics(self, music_path: str):
+        """更新桌面歌词（线程安全，通过信号调用）"""
+        self.update_desktop_lyrics_signal.emit(music_path)
+
+    def _update_desktop_lyrics_slot(self, music_path: str):
+        """更新桌面歌词的槽函数（在主线程执行）"""
+        if not self.lyric_window:
+            return
+
+        path = Path(music_path)
+        lrc = path.with_suffix('.lrc')
+        audio_info = AudioExtractor().extract(music_path, extract_cover=False)
+        if lrc.exists():
+            self.logger.info(f"找到歌词文件: {lrc}")
+            self.lyric_window.load_lrc(lrc)
+        elif audio_info.lyrics:
+            self.logger.info(f"找到嵌入歌词: {path}")
+            self.lyric_window.load_lrc(audio_info.lyrics)
+        else:
+            self.logger.info(f"未找到歌词文件或嵌入歌词: {path}")
+            self.lyric_window.lyric_.clear()
+            self.lyric_window._update_display()
+
+    def sync_desktop_lyrics(self, play_time_seconds: float):
+        """同步桌面歌词到播放时间（线程安全，通过信号调用）"""
+        self.sync_desktop_lyrics_signal.emit(play_time_seconds)
+
+    def _sync_desktop_lyrics_slot(self, play_time_seconds: float):
+        """同步桌面歌词的槽函数（在主线程执行）"""
+        if self.lyric_window and self.lyric_window.isVisible():
+            self.lyric_window.sync_to_time(int(play_time_seconds * 1000))
+
     def open_window(self, value: dict):
         """打开窗口"""
         if value['info'] == '打开主窗口':
@@ -396,11 +465,9 @@ class SlotManager(QObject):
             self.signal_manager.update_slider_signal.connect(self.update_ui_slider)
             self.signal_manager.update_music_name_signal.connect(self.update_music_name)
             self.start_timer_signal.connect(self.start_slider_timer)
+            self.update_desktop_lyrics_signal.connect(self._update_desktop_lyrics_slot)
+            self.sync_desktop_lyrics_signal.connect(self._sync_desktop_lyrics_slot)
             self.main_window.show()
-
-    def update_music_name(self, music_name: str):
-        """在主线程中更新音乐名称"""
-        self.main_window.ui.musicNameLabel.setText(music_name)
 
     def activate_window(self):
         """激活窗口"""

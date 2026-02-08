@@ -1,6 +1,6 @@
 {
-    "transparent": true,
-    "lock": true,
+    "transparent": false,
+    "lock": false,
     "position": [
         597.0,
         -17.0

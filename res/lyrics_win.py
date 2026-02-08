@@ -2,7 +2,7 @@ import re
 import json
 from PySide6.QtWidgets import QWidget, QApplication
 from PySide6.QtCore import QEvent, QTimer, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve
-from PySide6.QtGui import Qt, QFont, QColor
+from PySide6.QtGui import Qt, QFont, QColor, QPainter
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsTextItem, QGraphicsView
 
 from pathlib import Path
@@ -217,20 +217,47 @@ class LyricsWindow(QWidget):
         self.ui.graphicsView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.ui.graphicsView.setFrameShape(QGraphicsView.NoFrame)
 
-        self.scene = QGraphicsScene(0, 0, 500, 200, self)
+        # 获取QSS中的字体设置
+        self.lyric_font = QFont("楷体", 15)
+        self.lyric_font.setStyleStrategy(QFont.PreferAntialias)
+
+        # 设置视图为固定大小，避免滚动
+        view_width = int(self.width()) + 160
+        view_height = int(self.height())
+        print(view_width, view_height)
+        self.ui.graphicsView.setFixedSize(view_width, view_height)
+        self.ui.graphicsView.setSceneRect(0, 0, view_width, view_height)
+
+        # 创建场景
+        self.scene = QGraphicsScene(0, 0, view_width, view_height, self)
+        self.scene.setBackgroundBrush(Qt.transparent)
         self.ui.graphicsView.setScene(self.scene)
 
-        self.positions = [30, 80, 140, 190]
+        # 设置视图不更新背景，减少重绘
+        self.ui.graphicsView.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
+        self.ui.graphicsView.setOptimizationFlag(QGraphicsView.DontAdjustForAntialiasing, True)
+        self.ui.graphicsView.setRenderHint(QPainter.Antialiasing, False)
+        self.ui.graphicsView.setRenderHint(QPainter.TextAntialiasing, True)
+        self.ui.graphicsView.setRenderHint(QPainter.SmoothPixmapTransform, False)
+
+        self.positions = [20, 80, 150, 210]
         self.scales = [0.7, 1.0, 0.7, 0.0]
         self.opacities = [0.6, 1.0, 0.6, 0.0]
 
         for i in range(4):
             item = QGraphicsTextItem("")
-            item.setFont(QFont("楷体", 16))
+            item.setFont(self.lyric_font)
             item.setDefaultTextColor(QColor("white"))
+
+            # 设置文本项为固定宽度并使用HTML居中
+            item.setTextWidth(view_width)
             item.setPos(0, self.positions[i])
             item.setOpacity(self.opacities[i])
             item.setScale(self.scales[i])
+
+            # 设置文本项的标志，减少不必要的更新
+            item.setFlag(QGraphicsTextItem.ItemIgnoresTransformations, False)
+
             self.scene.addItem(item)
             self.lyric_items.append(item)
 
@@ -326,70 +353,50 @@ class LyricsWindow(QWidget):
         self.animation_running = False
 
         for i, item in enumerate(self.lyric_items):
-            item.setPlainText("")
+            item.setHtml("")
             item.setY(self.positions[i])
             item.setScale(self.scales[i])
             item.setOpacity(self.opacities[i])
 
-    def center_item(self, item):
-        text = item.toPlainText()
-        if '\n' in text:
-            lines = text.split('\n')
-            if len(lines) >= 2:
-                original_text = item.toPlainText()
-                item.setPlainText(lines[0])
-                first_line_width = item.boundingRect().width()
-                item.setPlainText(lines[1])
-                second_line_width = item.boundingRect().width()
-                item.setPlainText(' ')
-                space_width = item.boundingRect().width()
-                if space_width > 0:
-                    if first_line_width < second_line_width:
-                        spaces_needed = int((second_line_width - first_line_width) / (space_width+1))
-                        lines[0] = ' ' * spaces_needed + lines[0]
-                    elif second_line_width < first_line_width:
-                        spaces_needed = int((first_line_width - second_line_width) / (space_width+1))
-                        lines[1] = ' ' * spaces_needed + lines[1]
-                    new_text = '\n'.join(lines)
-                    item.setPlainText(new_text)
-                else:
-                    item.setPlainText(original_text)
-                max_width = 0
-                current_text = item.toPlainText()
-                for line in current_text.split('\n'):
-                    item.setPlainText(line)
-                    line_width = item.boundingRect().width()
-                    if line_width > max_width:
-                        max_width = line_width
-                item.setPlainText(current_text)
-                text_width = max_width * item.scale()
-            else:
-                text_width = item.boundingRect().width() * item.scale()
-        else:
-            text_width = item.boundingRect().width() * item.scale()
+    def _format_text_as_html(self, text):
+        """将文本格式化为HTML，实现自动换行和居中"""
+        if not text:
+            return ""
 
-        x = (500 - text_width) / 2
-        item.setX(x)
+        # 将换行符转换为HTML换行
+        text = text.replace('\n', '<br>')
+
+        # 创建HTML内容，使用div居中
+        html = f"""
+        <div style="
+            text-align: center;
+            font-family: '{self.lyric_font.family()}';
+            font-size: {self.lyric_font.pointSize()}pt;
+            color: white;
+            line-height: 1.2;
+        ">
+            {text}
+        </div>
+        """
+        return html
+
+    def center_item(self, item):
+        """使用HTML居中文本，无需计算宽度"""
+        text = item.toPlainText()
+        if not text:
+            return
+
+        # 设置HTML格式的文本，自动居中
+        html_text = self._format_text_as_html(text)
+        item.setHtml(html_text)
+
+        # 设置文本宽度为视图宽度，使文本自动换行
+        item.setTextWidth(self.scene.width())
 
     def create_animation(self, item, start_y, end_y, start_scale, end_scale,
                           start_opacity, end_opacity, duration):
-        text = item.toPlainText()
-        if '\n' in text:
-            lines = text.split('\n')
-            max_width = 0
-            original_text = item.toPlainText()
-            for line in lines:
-                item.setPlainText(line)
-                line_width = item.boundingRect().width()
-                if line_width > max_width:
-                    max_width = line_width
-            item.setPlainText(original_text)
-            text_width = max_width
-        else:
-            text_width = item.boundingRect().width()
-
-        start_x = (500 - text_width * start_scale) / 2
-        end_x = (500 - text_width * end_scale) / 2
+        start_x = 0
+        end_x = 0
 
         x_anim = QPropertyAnimation(item, b"x")
         x_anim.setStartValue(start_x)
@@ -474,8 +481,22 @@ class LyricsWindow(QWidget):
             self.animation_group.addAnimation(anims[2])
             self.animation_group.addAnimation(anims[3])
 
+            if self.scales[i] > 0:
+                compensated_width = self.scene.width() / self.scales[i]
+                item.setTextWidth(compensated_width)
+
+            anims[2].valueChanged.connect(
+                lambda val, item=item, start_scale=self.scales[i], end_scale=end_scale:
+                    self._update_text_width_during_animation(item, val, start_scale, end_scale)
+            )
+
         self.animation_group.finished.connect(self._on_animation_finished)
         self.animation_group.start()
+
+    def _update_text_width_during_animation(self, item, current_scale, start_scale, end_scale):
+        if current_scale > 0:
+            compensated_width = self.scene.width() / current_scale
+            item.setTextWidth(compensated_width)
 
     def _on_animation_finished(self):
         self.animation_running = False
@@ -492,9 +513,17 @@ class LyricsWindow(QWidget):
 
         for i, item in enumerate(self.lyric_items):
             text = texts[i]
-            item.setPlainText(text)
+
+            if text:
+                html_text = self._format_text_as_html(text)
+                item.setHtml(html_text)
+            else:
+                item.setHtml("")
+
             item.setY(self.positions[i])
             item.setScale(self.scales[i])
             item.setOpacity(self.opacities[i])
-            self.center_item(item)
 
+            if self.scales[i] > 0:
+                compensated_width = self.scene.width() / self.scales[i]
+                item.setTextWidth(compensated_width)

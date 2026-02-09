@@ -1,11 +1,31 @@
 {
-    "transparent": false,
-    "lock": false,
-    "position": [
-        597.0,
-        -17.0
+    "transparent": true,
+    "lock": true,
+    "win_pos": [
+        595.0,
+        -23.0
     ],
     "font": "楷体",
-    "font_size": 26,
-    "font_color": "#FFFFFF"
+    "font_size": 15,
+    "font_color": "#FFFFFF",
+    "stroke_color": "#000000",
+    "stroke_width": 5,
+    "lyric_pos": [
+        20,
+        80,
+        150,
+        210
+    ],
+    "lyric_scales": [
+        0.8,
+        1.0,
+        0.8,
+        0.0
+    ],
+    "lyric_opacities": [
+        0.5,
+        1.0,
+        0.5,
+        0.0
+    ]
 }

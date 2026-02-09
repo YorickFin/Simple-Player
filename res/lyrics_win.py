@@ -2,13 +2,53 @@ import re
 import json
 from PySide6.QtWidgets import QWidget, QApplication
 from PySide6.QtCore import QEvent, QTimer, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve
-from PySide6.QtGui import Qt, QFont, QColor, QPainter
+from PySide6.QtGui import Qt, QFont, QColor, QPainter, QPainterPath, QPen, QBrush
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsTextItem, QGraphicsView
 
 from pathlib import Path
 
 from res.ui import desktop_lyrics_ui
 from res.qrc import desktop_lyrics_rc  # noqa: F401
+
+
+class OutlinedTextItem(QGraphicsTextItem):
+    def __init__(self, text="", stroke_color=QColor(0, 0, 0), stroke_width=2):
+        super().__init__(text)
+        self.stroke_color = stroke_color
+        self.stroke_width = stroke_width
+
+    def paint(self, painter, option, widget=None):
+        painter.save()
+
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.TextAntialiasing)
+
+        doc = self.document()
+
+        for block in doc.toPlainText().split('\n'):
+            if not block:
+                continue
+
+            path = QPainterPath()
+            path.addText(0, 0, self.font(), block)
+
+            rect = self.boundingRect()
+            x = (rect.width() - path.boundingRect().width()) / 2
+            y = (rect.height() - path.boundingRect().height()) / 2 + path.boundingRect().height()
+
+            painter.translate(x, y)
+
+            pen = QPen(self.stroke_color, self.stroke_width)
+            pen.setJoinStyle(Qt.RoundJoin)
+            pen.setCapStyle(Qt.RoundCap)
+
+            painter.strokePath(path, pen)
+            painter.fillPath(path, QBrush(self.defaultTextColor()))
+
+            painter.translate(-x, -y)
+            break
+
+        painter.restore()
 
 
 class LyricsWindow(QWidget):
@@ -26,8 +66,8 @@ class LyricsWindow(QWidget):
         # 不可编辑置顶
         self.setWindowFlags(self.windowFlags() | Qt.WindowDoesNotAcceptFocus | Qt.WindowStaysOnTopHint)
 
-        self.ui.lockRButton.toggled.connect(self.lock_control)
-        self.ui.transparentRButton.toggled.connect(self.transparent_control)
+        self.ui.lockRButton.toggled.connect(self.set_lock)
+        self.ui.transparentRButton.toggled.connect(self.set_transparent)
 
         # 初始化歌词相关属性
         self.init_lyric_attributes()
@@ -43,9 +83,11 @@ class LyricsWindow(QWidget):
         with open(r'res\config\desktop_lyrics.json', 'r', encoding='utf-8') as f:
             self.config = json.load(f)
 
-        # 应用配置
+        # 窗口锁定配置
         self.move_event = not self.config['lock']
         self.ui.lockRButton.setChecked(self.config['lock'])
+
+        # 透明窗口配置
         self.ui.transparentRButton.setChecked(self.config['transparent'])
         if self.config['transparent']:
             # 背景窗口解除事件过滤器
@@ -55,23 +97,48 @@ class LyricsWindow(QWidget):
             # 设置鼠标事件穿透
             self.setWindowFlags(self.windowFlags() | Qt.WindowTransparentForInput)
             self.show()
-        if self.config['position']:
-            self.move(self.config['position'][0], self.config['position'][1])
 
-    def lock_control(self, checked):
+        # 窗口位置配置
+        if self.config['win_pos']:
+            self.move(self.config['win_pos'][0], self.config['win_pos'][1])
+
+        # 字体配置
+        font_family = self.config.get('font', '楷体')
+        font_size = self.config.get('font_size', 16)
+        self.lyric_font = QFont(font_family, font_size)
+        self.lyric_font.setStyleStrategy(QFont.PreferAntialias)
+
+        # 字体颜色
+        font_color = self.config.get('font_color', '#FFFFFF')
+        self.font_color = QColor(font_color)
+
+        # 描边配置
+        stroke_color = self.config.get('stroke_color', '#000000')
+        stroke_width = self.config.get('stroke_width', 10)
+        self.stroke_color = QColor(stroke_color)
+        self.stroke_width = stroke_width
+
+        # 歌词位置配置
+        self.lyric_pos = self.config.get('lyric_pos', [20, 80, 150, 210])
+        self.lyric_scales = self.config.get('lyric_scales', [0.8, 1.0, 0.8, 0.0])
+        self.lyric_opacities = self.config.get('lyric_opacities', [0.5, 1.0, 0.5, 0.0])
+
+        # 应用到UI
+        self._apply_lyric_config()
+
+    def set_lock(self, checked):
         if checked:
             self.move_event = False
             self.config['lock'] = True
             if self.move_pos:
-                self.config['position'] = [self.move_pos.x(), self.move_pos.y()]
+                self.config['win_pos'] = [self.move_pos.x(), self.move_pos.y()]
         else:
             self.move_event = True
             self.config['lock'] = False
 
-        with open(r'res\config\desktop_lyrics.json', 'w', encoding='utf-8') as f:
-            json.dump(self.config, f, ensure_ascii=False, indent=4)
+        self._save_config()
 
-    def transparent_control(self, checked):
+    def set_transparent(self, checked):
         if checked:
             self.ui.background.setStyleSheet(
                 """
@@ -103,8 +170,69 @@ class LyricsWindow(QWidget):
             self.setWindowFlags(self.windowFlags() & ~Qt.WindowTransparentForInput)
             self.show()
 
+        self._save_config()
+
+    def _apply_lyric_config(self):
+        for i, item in enumerate(self.lyric_items):
+            item.setFont(self.lyric_font)
+            item.setDefaultTextColor(self.font_color)
+            item.stroke_color = self.stroke_color
+            item.stroke_width = self.stroke_width
+            item.setY(self.lyric_pos[i])
+            item.setScale(self.lyric_scales[i])
+            item.setOpacity(self.lyric_opacities[i])
+
+    def set_font(self, font_family: str):
+        self.config['font'] = font_family
+        self.lyric_font.setFamily(font_family)
+        self._save_config()
+        self._apply_lyric_config()
+
+    def set_font_size(self, font_size: int):
+        self.config['font_size'] = font_size
+        self.lyric_font.setPointSize(font_size)
+        self._save_config()
+        self._apply_lyric_config()
+
+    def set_font_color(self, font_color: str):
+        self.config['font_color'] = font_color
+        self.font_color = QColor(font_color)
+        self._save_config()
+        self._apply_lyric_config()
+
+    def set_stroke_color(self, stroke_color: str):
+        self.config['stroke_color'] = stroke_color
+        self.stroke_color = QColor(stroke_color)
+        self._save_config()
+        self._apply_lyric_config()
+
+    def set_stroke_width(self, stroke_width: int):
+        self.config['stroke_width'] = stroke_width
+        self.stroke_width = stroke_width
+        self._save_config()
+        self._apply_lyric_config()
+
+    def _save_config(self):
         with open(r'res\config\desktop_lyrics.json', 'w', encoding='utf-8') as f:
             json.dump(self.config, f, ensure_ascii=False, indent=4)
+
+    def set_lyric_pos(self, lyric_pos: list):
+        self.config['lyric_pos'] = lyric_pos
+        self.lyric_pos = lyric_pos
+        self._save_config()
+        self._apply_lyric_config()
+
+    def set_lyric_scales(self, lyric_scales: list):
+        self.config['lyric_scales'] = lyric_scales
+        self.lyric_scales = lyric_scales
+        self._save_config()
+        self._apply_lyric_config()
+
+    def set_lyric_opacities(self, lyric_opacities: list):
+        self.config['lyric_opacities'] = lyric_opacities
+        self.lyric_opacities = lyric_opacities
+        self._save_config()
+        self._apply_lyric_config()
 
 # ########################################## window_event ##########################################
 
@@ -164,7 +292,7 @@ class LyricsWindow(QWidget):
 
     def windowAdaptation(self):
         """界面大小自适应"""
-        if self.config.get('position') and self.config.get('size'):
+        if self.config.get('win_pos') and self.config.get('size'):
             return
 
         screen_width, screen_height = self.desktop_size
@@ -217,10 +345,6 @@ class LyricsWindow(QWidget):
         self.ui.graphicsView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.ui.graphicsView.setFrameShape(QGraphicsView.NoFrame)
 
-        # 获取QSS中的字体设置
-        self.lyric_font = QFont("楷体", 15)
-        self.lyric_font.setStyleStrategy(QFont.PreferAntialias)
-
         # 设置视图为固定大小，避免滚动
         view_width = int(self.width()) + 160
         view_height = int(self.height())
@@ -240,24 +364,10 @@ class LyricsWindow(QWidget):
         self.ui.graphicsView.setRenderHint(QPainter.TextAntialiasing, True)
         self.ui.graphicsView.setRenderHint(QPainter.SmoothPixmapTransform, False)
 
-        self.positions = [20, 80, 150, 210]
-        self.scales = [0.7, 1.0, 0.7, 0.0]
-        self.opacities = [0.6, 1.0, 0.6, 0.0]
-
         for i in range(4):
-            item = QGraphicsTextItem("")
-            item.setFont(self.lyric_font)
-            item.setDefaultTextColor(QColor("white"))
-
-            # 设置文本项为固定宽度并使用HTML居中
+            item = OutlinedTextItem("", stroke_color=QColor(0, 0, 0), stroke_width=10)
             item.setTextWidth(view_width)
-            item.setPos(0, self.positions[i])
-            item.setOpacity(self.opacities[i])
-            item.setScale(self.scales[i])
-
-            # 设置文本项的标志，减少不必要的更新
             item.setFlag(QGraphicsTextItem.ItemIgnoresTransformations, False)
-
             self.scene.addItem(item)
             self.lyric_items.append(item)
 
@@ -354,9 +464,9 @@ class LyricsWindow(QWidget):
 
         for i, item in enumerate(self.lyric_items):
             item.setHtml("")
-            item.setY(self.positions[i])
-            item.setScale(self.scales[i])
-            item.setOpacity(self.opacities[i])
+            item.setY(self.lyric_pos[i])
+            item.setScale(self.lyric_scales[i])
+            item.setOpacity(self.lyric_opacities[i])
 
     def _format_text_as_html(self, text):
         """将文本格式化为HTML，实现自动换行和居中"""
@@ -465,15 +575,15 @@ class LyricsWindow(QWidget):
                 end_scale = 0.0
                 end_opacity = 0.0
             else:
-                end_y = self.positions[i - 1]
-                end_scale = self.scales[i - 1]
-                end_opacity = self.opacities[i - 1]
+                end_y = self.lyric_pos[i - 1]
+                end_scale = self.lyric_scales[i - 1]
+                end_opacity = self.lyric_opacities[i - 1]
 
             anims = self.create_animation(
                 item,
-                self.positions[i], end_y,
-                self.scales[i], end_scale,
-                self.opacities[i], end_opacity,
+                self.lyric_pos[i], end_y,
+                self.lyric_scales[i], end_scale,
+                self.lyric_opacities[i], end_opacity,
                 duration
             )
             self.animation_group.addAnimation(anims[0])
@@ -481,12 +591,12 @@ class LyricsWindow(QWidget):
             self.animation_group.addAnimation(anims[2])
             self.animation_group.addAnimation(anims[3])
 
-            if self.scales[i] > 0:
-                compensated_width = self.scene.width() / self.scales[i]
+            if self.lyric_scales[i] > 0:
+                compensated_width = self.scene.width() / self.lyric_scales[i]
                 item.setTextWidth(compensated_width)
 
             anims[2].valueChanged.connect(
-                lambda val, item=item, start_scale=self.scales[i], end_scale=end_scale:
+                lambda val, item=item, start_scale=self.lyric_scales[i], end_scale=end_scale:
                     self._update_text_width_during_animation(item, val, start_scale, end_scale)
             )
 
@@ -520,10 +630,10 @@ class LyricsWindow(QWidget):
             else:
                 item.setHtml("")
 
-            item.setY(self.positions[i])
-            item.setScale(self.scales[i])
-            item.setOpacity(self.opacities[i])
+            item.setY(self.lyric_pos[i])
+            item.setScale(self.lyric_scales[i])
+            item.setOpacity(self.lyric_opacities[i])
 
-            if self.scales[i] > 0:
-                compensated_width = self.scene.width() / self.scales[i]
+            if self.lyric_scales[i] > 0:
+                compensated_width = self.scene.width() / self.lyric_scales[i]
                 item.setTextWidth(compensated_width)

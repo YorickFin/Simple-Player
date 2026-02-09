@@ -26,7 +26,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/yourusername/simple-player.git
+git clone https://github.com/YorickFin/simple-player.git
 cd simple-player
 ```
 
@@ -102,8 +102,7 @@ Simple Player/
 
 ## 👨‍💻 开发者
 
-- **作者**：YorickFin
-- **GitHub**：[主页链接](https://github.com/YorickFin)
+- **作者**：[GitHub主页](https://github.com/YorickFin)
 
 ---
 

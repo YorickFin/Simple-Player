@@ -1,6 +1,8 @@
 
+import shutil
 import random
 import time
+import subprocess
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QObject, Signal, QTimer, Qt
 from PySide6.QtGui import QIcon, QPixmap
@@ -59,6 +61,8 @@ class SlotManager(QObject):
         self.stop_event = Event()
         self.slider_timer = None
         self.timer_last_start = 0.0
+
+        self.ZonyLrcTools_path = Path(r'plugins\ZonyLrcTools\ZonyLrcTools.Cli.exe')
 
     def handle_signal(self, value: dict):
         """处理信号"""
@@ -436,14 +440,35 @@ class SlotManager(QObject):
         path = Path(music_path)
         lrc = path.with_suffix('.lrc')
         audio_info = AudioExtractor().extract(music_path, extract_cover=False)
-        if lrc.exists():
-            self.logger.info(f"找到歌词文件: {lrc}")
-            self.lyric_window.load_lrc(lrc)
-        elif audio_info.lyrics:
+        if audio_info.lyrics:
             self.logger.info(f"找到嵌入歌词: {path}")
             self.lyric_window.load_lrc(audio_info.lyrics)
+        elif lrc.exists():
+            self.logger.info(f"找到歌词文件: {lrc}")
+            self.lyric_window.load_lrc(lrc)
+        elif self.ZonyLrcTools_path.exists():
+            self.logger.info(f"尝试从网络获取歌词: {path}")
+            temp_dir = Path(r'res\temp')
+            if temp_dir.exists():
+                shutil.rmtree(temp_dir)
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy(path, temp_dir / path.name)
+            process = subprocess.Popen(
+                f'"{self.ZonyLrcTools_path}" download -d "{temp_dir}" -l -n 2',
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            process.wait()
+            # 检查是否成功下载歌词
+            lrc_file = temp_dir / f"{path.stem}.lrc"
+            if lrc_file.exists():
+                self.logger.info(f"成功下载歌词到: {lrc_file}")
+                shutil.copy(lrc_file, lrc)
+                self.lyric_window.load_lrc(lrc_file)
+            else:
+                self.logger.error(f"从网络下载歌词失败: {path}")
+            shutil.rmtree(temp_dir)
         else:
-            self.logger.info(f"未找到歌词文件或嵌入歌词: {path}")
+            self.logger.info(f"未能从网络或文件中找到歌词: {path}")
             self.lyric_window.lyric_.clear()
             self.lyric_window._update_display()
 

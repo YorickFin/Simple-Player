@@ -1,12 +1,13 @@
 
 import json
 import time
-from PySide6.QtWidgets import (QTableView, QHeaderView, QFileDialog,
-                            QMenu, QSlider, QLabel, QWidgetAction)
-from PySide6.QtCore import QTimer, QStandardPaths, QPoint
-from PySide6.QtGui import QAction, QEnterEvent, QPixmap, QIcon, QCursor, Qt
 from pathlib import Path
 from threading import Thread
+from autoxkit.mousekey import HotkeyListener
+from PySide6.QtCore import QTimer, QStandardPaths, QPoint
+from PySide6.QtGui import QAction, QEnterEvent, QPixmap, QIcon, QCursor, Qt
+from PySide6.QtWidgets import (QTableView, QHeaderView, QFileDialog,
+                            QMenu, QSlider, QLabel, QWidgetAction)
 
 from res.ui import main_ui
 from res.qrc import main_rc  # noqa: F401
@@ -92,6 +93,31 @@ class MainWindow(WindowSuper):
         self.ui.playSlider1.sliderReleased.connect(self.on_slider_released)
         # self.ui.playSlider2.sliderReleased.connect(lambda: self.seek(self.ui.playSlider2.value()))
 
+        # close_event
+        self.init_close_config()
+        self.ui.quitRButton.toggled.connect(self.change_close_config)
+
+        # shortcut
+        self.init_shortcut()
+
+
+# ########################################## init_config ##########################################
+
+    def init_config(self):
+        with open('res/config/config.json', 'r', encoding='utf-8') as f:
+            self.config = json.load(f)
+        with open('res/config/music_config.json', 'r', encoding='utf-8') as f:
+            self.music_config = json.load(f)
+
+        with open('res/qss/loop_one_song.qss', 'r', encoding='utf-8') as f:
+            self.loop_one_song_qss = f.read()
+        with open('res/qss/ordered_play.qss', 'r', encoding='utf-8') as f:
+            self.ordered_play_qss = f.read()
+        with open('res/qss/random_play.qss', 'r', encoding='utf-8') as f:
+            self.random_play_qss = f.read()
+
+        for folder_path in self.config['folder_list']:
+            Thread(target=self.get_music_files, args=(folder_path,)).start()
 
 # ########################################## replace_music_name_label ##########################################
 
@@ -111,24 +137,6 @@ class MainWindow(WindowSuper):
 
         layout.insertWidget(index, new_label)
         self.ui.musicNameLabel = new_label
-
-# ########################################## init_config ##########################################
-
-    def init_config(self):
-        with open('res/config/config.json', 'r', encoding='utf-8') as f:
-            self.config = json.load(f)
-        with open('res/config/music_config.json', 'r', encoding='utf-8') as f:
-            self.music_config = json.load(f)
-
-        with open('res/qss/loop_one_song.qss', 'r', encoding='utf-8') as f:
-            self.loop_one_song_qss = f.read()
-        with open('res/qss/ordered_play.qss', 'r', encoding='utf-8') as f:
-            self.ordered_play_qss = f.read()
-        with open('res/qss/random_play.qss', 'r', encoding='utf-8') as f:
-            self.random_play_qss = f.read()
-
-        for folder_path in self.config['folder_list']:
-            Thread(target=self.get_music_files, args=(folder_path,)).start()
 
 # ########################################## menuListWidget ##########################################
 
@@ -226,7 +234,7 @@ class MainWindow(WindowSuper):
             self.config['default_open_folder'] = str(folder_path.parent)
             with open('res/config/config.json', 'w', encoding='utf-8') as f:
                 json.dump(self.config, f, ensure_ascii=False, indent=4)
-        Thread(target=self.get_music_files, args=(folder_path,)).start()
+            Thread(target=self.get_music_files, args=(folder_path,)).start()
         self.default_option_management()
 
     def remove_folder(self, folder_path: str):
@@ -371,7 +379,7 @@ class MainWindow(WindowSuper):
         self.volume_QMenu.setStyleSheet("""
             QMenu {
                 background-color: rgba(47, 54, 72, 230);
-                border-radius: 5px;
+                border-radius: 6px;
                 padding: 6px;
                 border: 0px solid;
             }
@@ -386,17 +394,24 @@ class MainWindow(WindowSuper):
         self.volume_slider.setFixedWidth(26)
         self.volume_slider.valueChanged.connect(self.on_volume_changed)
         self.volume_slider.sliderReleased.connect(self.save_volume)
-
         slider_action = QWidgetAction(self.volume_QMenu)
         slider_action.setDefaultWidget(self.volume_slider)
-        self.volume_QMenu.addAction(slider_action)
 
-        self.volume_label = QLabel(f"{volume}%")
+        self.volume_label = QLabel(f"{volume}")
         self.volume_label.setAlignment(Qt.AlignCenter)
         self.volume_label.setFixedWidth(26)
         label_action = QWidgetAction(self.volume_QMenu)
         label_action.setDefaultWidget(self.volume_label)
+
+        self.fill = QLabel("")
+        self.fill.setAlignment(Qt.AlignCenter)
+        self.fill.setFixedHeight(5)
+        fill_action = QWidgetAction(self.volume_QMenu)
+        fill_action.setDefaultWidget(self.fill)
+
         self.volume_QMenu.addAction(label_action)
+        self.volume_QMenu.addAction(fill_action)
+        self.volume_QMenu.addAction(slider_action)
 
     def show_volume_slider(self, ui):
         """显示音量滑块菜单"""
@@ -404,12 +419,12 @@ class MainWindow(WindowSuper):
         btn_rect = ui.rect()
         global_pos = ui.mapToGlobal(btn_rect.bottomLeft())
         # 显示菜单
-        self.volume_QMenu.exec(QPoint(global_pos.x() -8, global_pos.y() - 140))
+        self.volume_QMenu.exec(QPoint(global_pos.x() -8, global_pos.y() - 150))
 
     def on_volume_changed(self, value):
         """音量改变时的处理"""
         self.config['volume'] = value
-        self.volume_label.setText(f"{value}%")
+        self.volume_label.setText(f"{value}")
         self.signal_manager.send_signal({'action': 'set_volume', 'volume': value / 100})
 
     def save_volume(self):
@@ -451,9 +466,13 @@ class MainWindow(WindowSuper):
             self.signal_manager.send_signal({'action': 'play_control', 'info': 'pause'})
 
     def pgup_music(self):
+        if not self.ui.playRButton1.isChecked():
+            self.ui.playRButton1.setChecked(True)
         self.signal_manager.send_signal({'action': 'play_control', 'info': 'pgup'})
 
     def pgdn_music(self):
+        if not self.ui.playRButton1.isChecked():
+            self.ui.playRButton1.setChecked(True)
         self.signal_manager.send_signal({'action': 'play_control', 'info': 'pgdn'})
 
     def seek(self, value: int):
@@ -588,11 +607,7 @@ class MainWindow(WindowSuper):
             self.ui.winMaxRButton.setChecked(not self.ui.winMaxRButton.isChecked())
         self.double_click_timer = time.time()
 
-    def close_event(self):
-        self.ui.winMaxRButton.setChecked(False)
-        self.close()
-
-    # ########################################## 界面活动检测 ##########################################
+# ########################################## 界面活动检测 ##########################################
 
     def update_activity_time(self):
         """更新活动时间戳"""
@@ -657,3 +672,99 @@ class MainWindow(WindowSuper):
             bool: 是否长时间未活动
         """
         return time.time() - self.last_activity_time > threshold
+
+# ########################################## close_event ##########################################
+
+    def init_close_config(self):
+        if self.config['quit_program']:
+            self.ui.quitRButton.setChecked(True)
+        else:
+            self.ui.minTrayRButton.setChecked(True)
+
+    def close_event(self):
+        if self.config['quit_program']:
+            self.signal_manager.send_signal({'action': '退出程序'})
+        else:
+            self.ui.winMaxRButton.setChecked(False)
+            self.close()
+
+    def change_close_config(self, state: bool):
+        self.logger.info(f"退出程序配置变更: {state}")
+        self.config['quit_program'] = state
+
+# ########################################## 快键键 ##########################################
+
+    def init_shortcut(self):
+        """初始化快键键"""
+
+        self.hotkey_listener = HotkeyListener(timeout=5.0)
+        self.hotkey_listener.register_hotkey(
+            "play_pause_key",
+            self.config['shortcuts']['play_pause_key'],
+            self.ui.playRButton1.click
+        )
+        self.hotkey_listener.register_hotkey(
+            "pgup_key",
+            self.config['shortcuts']['pgup_key'],
+            self.ui.pgupRButton1.click
+        )
+        self.hotkey_listener.register_hotkey(
+            "pgdn_key",
+            self.config['shortcuts']['pgdn_key'],
+            self.ui.pgdnRButton1.click
+        )
+        self.hotkey_listener.register_hotkey(
+            "volup_key",
+            self.config['shortcuts']['volup_key'],
+            self.volup_key
+        )
+        self.hotkey_listener.register_hotkey(
+            "voldn_key",
+            self.config['shortcuts']['voldn_key'],
+            self.voldn_key
+        )
+
+        self.set_key_control()
+
+    def volup_key(self):
+        value = self.config['volume']
+        value = min(value + 2, 100)
+        self.on_volume_changed(value)
+        self.save_volume()
+
+    def voldn_key(self):
+        value = self.config['volume']
+        value = max(value - 2, 0)
+        self.on_volume_changed(value)
+        self.save_volume()
+
+    def set_key_control(self):
+        """设置快键键控件"""
+
+        # 设置文本
+        text = "+".join(self.config['shortcuts']['play_pause_key'])
+        self.ui.playPauseKeyLEdit.setText(text)
+
+        text = "+".join(self.config['shortcuts']['pgup_key'])
+        self.ui.pgupKeyLEdit.setText(text)
+
+        text = "+".join(self.config['shortcuts']['pgdn_key'])
+        self.ui.pgdnKeyLEdit.setText(text)
+
+        text = "+".join(self.config['shortcuts']['volup_key'])
+        self.ui.volumeUpKeyLEdit.setText(text)
+
+        text = "+".join(self.config['shortcuts']['voldn_key'])
+        self.ui.volumeDnKeyLEdit.setText(text)
+
+        # 设置不可编辑
+        self.ui.playPauseKeyLEdit.setReadOnly(True)
+        self.ui.pgupKeyLEdit.setReadOnly(True)
+        self.ui.pgdnKeyLEdit.setReadOnly(True)
+        self.ui.volumeUpKeyLEdit.setReadOnly(True)
+        self.ui.volumeDnKeyLEdit.setReadOnly(True)
+
+
+
+
+

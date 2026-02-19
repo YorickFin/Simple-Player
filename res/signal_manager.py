@@ -46,7 +46,7 @@ class SlotManager(QObject):
         self.signal_manager = None
 
         self.main_window = None
-        self.lyric_window = None
+        self.lyrics_window = None
         self.tray_action = None
 
         self.play_flag = False                          # 播放标志
@@ -71,7 +71,7 @@ class SlotManager(QObject):
             '打开窗口': lambda: self.open_window(value),
             '激活窗口': lambda: self.activate_window(),
             '创建托盘': lambda: self.create_tray(),
-            '退出程序': lambda: self.exit_program(),
+            '退出程序': lambda: self.quit_program(),
 
             'seek': lambda: self.player.seek(value['info']),
             'play_music': lambda: self.play_music(value),
@@ -413,10 +413,10 @@ class SlotManager(QObject):
 
     def open_desktop_lyrics(self):
         """打开桌面歌词窗口"""
-        self.lyric_window = LyricsWindow(self.signal_manager, self.logger)
-        self.lyric_window.show()
+        self.lyrics_window = LyricsWindow(self.signal_manager, self.logger)
+        self.lyrics_window.show()
 
-        self.lyric_window.set_lyric_offset(0.5)
+        self.lyrics_window.set_lyric_offset(0.5)
 
         if self.current_music:
             self.update_desktop_lyrics(self.current_music)
@@ -426,7 +426,7 @@ class SlotManager(QObject):
 
     def close_desktop_lyrics(self):
         """关闭桌面歌词窗口"""
-        self.lyric_window.close()
+        self.lyrics_window.close()
 
     def update_desktop_lyrics(self, music_path: str):
         """更新桌面歌词（线程安全，通过信号调用）"""
@@ -434,7 +434,7 @@ class SlotManager(QObject):
 
     def _update_desktop_lyrics_slot(self, music_path: str):
         """更新桌面歌词的槽函数（在主线程执行）"""
-        if not self.lyric_window:
+        if not self.lyrics_window:
             return
 
         path = Path(music_path)
@@ -442,10 +442,10 @@ class SlotManager(QObject):
         audio_info = AudioExtractor().extract(music_path, extract_cover=False)
         if audio_info.lyrics:
             self.logger.info(f"找到嵌入歌词: {path}")
-            self.lyric_window.load_lrc(audio_info.lyrics)
+            self.lyrics_window.load_lrc(audio_info.lyrics)
         elif lrc.exists():
             self.logger.info(f"找到歌词文件: {lrc}")
-            self.lyric_window.load_lrc(lrc)
+            self.lyrics_window.load_lrc(lrc)
         elif self.ZonyLrcTools_path.exists():
             self.logger.info(f"尝试从网络获取歌词: {path}")
             temp_dir = Path(r'res\temp')
@@ -463,14 +463,17 @@ class SlotManager(QObject):
             if lrc_file.exists():
                 self.logger.info(f"成功下载歌词到: {lrc_file}")
                 shutil.copy(lrc_file, lrc)
-                self.lyric_window.load_lrc(lrc_file)
+                self.lyrics_window.load_lrc(lrc_file)
             else:
                 self.logger.error(f"从网络下载歌词失败: {path}")
+                self.logger.info(f"未能从网络或文件中找到歌词: {path}")
+                self.lyrics_window.lyrics.clear()
+                self.lyrics_window._update_display()
             shutil.rmtree(temp_dir)
         else:
             self.logger.info(f"未能从网络或文件中找到歌词: {path}")
-            self.lyric_window.lyric_.clear()
-            self.lyric_window._update_display()
+            self.lyrics_window.lyrics.clear()
+            self.lyrics_window._update_display()
 
     def sync_desktop_lyrics(self, play_time_seconds: float):
         """同步桌面歌词到播放时间（线程安全，通过信号调用）"""
@@ -478,8 +481,8 @@ class SlotManager(QObject):
 
     def _sync_desktop_lyrics_slot(self, play_time_seconds: float):
         """同步桌面歌词的槽函数（在主线程执行）"""
-        if self.lyric_window and self.lyric_window.isVisible():
-            self.lyric_window.sync_to_time(int(play_time_seconds * 1000))
+        if self.lyrics_window and self.lyrics_window.isVisible():
+            self.lyrics_window.sync_to_time(int(play_time_seconds * 1000))
 
     def open_window(self, value: dict):
         """打开窗口"""
@@ -503,7 +506,7 @@ class SlotManager(QObject):
         """创建托盘"""
         self.tray_action = TrayAction(self.signal_manager, self.logger)
 
-    def exit_program(self):
+    def quit_program(self):
         """退出程序"""
         self.stop_current_playback()
         self.tray_action.cleanTray()

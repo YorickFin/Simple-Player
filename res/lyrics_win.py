@@ -12,10 +12,10 @@ from res.qrc import desktop_lyrics_rc  # noqa: F401
 
 
 class OutlinedTextItem(QGraphicsTextItem):
-    def __init__(self, text="", stroke_color=QColor(0, 0, 0), stroke_width=2):
+    def __init__(self, text="", stroke_color=QColor(0, 0, 0), stroke_size=2):
         super().__init__(text)
         self.stroke_color = stroke_color
-        self.stroke_width = stroke_width
+        self.stroke_size = stroke_size
 
     def paint(self, painter, option, widget=None):
         painter.save()
@@ -38,7 +38,7 @@ class OutlinedTextItem(QGraphicsTextItem):
 
             painter.translate(x, y)
 
-            pen = QPen(self.stroke_color, self.stroke_width)
+            pen = QPen(self.stroke_color, self.stroke_size)
             pen.setJoinStyle(Qt.RoundJoin)
             pen.setCapStyle(Qt.RoundCap)
 
@@ -114,9 +114,9 @@ class LyricsWindow(QWidget):
 
         # 描边配置
         stroke_color = self.config.get('stroke_color', '#000000')
-        stroke_width = self.config.get('stroke_width', 10)
+        stroke_size = self.config.get('stroke_size', 10)
         self.stroke_color = QColor(stroke_color)
-        self.stroke_width = stroke_width
+        self.stroke_size = stroke_size
 
         # 歌词位置配置
         self.lyric_pos = self.config.get('lyric_pos', [20, 80, 150, 210])
@@ -177,7 +177,7 @@ class LyricsWindow(QWidget):
             item.setFont(self.lyric_font)
             item.setDefaultTextColor(self.font_color)
             item.stroke_color = self.stroke_color
-            item.stroke_width = self.stroke_width
+            item.stroke_size = self.stroke_size
             item.setY(self.lyric_pos[i])
             item.setScale(self.lyric_scales[i])
             item.setOpacity(self.lyric_opacities[i])
@@ -206,9 +206,9 @@ class LyricsWindow(QWidget):
         self._save_config()
         self._apply_lyric_config()
 
-    def set_stroke_width(self, stroke_width: int):
-        self.config['stroke_width'] = stroke_width
-        self.stroke_width = stroke_width
+    def set_stroke_size(self, stroke_size: int):
+        self.config['stroke_size'] = stroke_size
+        self.stroke_size = stroke_size
         self._save_config()
         self._apply_lyric_config()
 
@@ -330,7 +330,7 @@ class LyricsWindow(QWidget):
         # 应用qss
         ui_object.setStyleSheet(qss)
 
-# ########################################## lyric_widget 移植 ##########################################
+# ########################################## lyric_widget ##########################################
 
     def init_lyric_attributes(self):
         self.lyrics = []
@@ -348,7 +348,6 @@ class LyricsWindow(QWidget):
         # 设置视图为固定大小，避免滚动
         view_width = int(self.width()) + 160
         view_height = int(self.height())
-        print(view_width, view_height)
         self.ui.graphicsView.setFixedSize(view_width, view_height)
         self.ui.graphicsView.setSceneRect(0, 0, view_width, view_height)
 
@@ -365,7 +364,7 @@ class LyricsWindow(QWidget):
         self.ui.graphicsView.setRenderHint(QPainter.SmoothPixmapTransform, False)
 
         for i in range(4):
-            item = OutlinedTextItem("", stroke_color=QColor(0, 0, 0), stroke_width=10)
+            item = OutlinedTextItem("", stroke_color=QColor(0, 0, 0), stroke_size=10)
             item.setTextWidth(view_width)
             item.setFlag(QGraphicsTextItem.ItemIgnoresTransformations, False)
             self.scene.addItem(item)
@@ -398,7 +397,7 @@ class LyricsWindow(QWidget):
             with open(lrc_source, 'r', encoding='utf-8') as f:
                 return f.readlines()
         except (FileNotFoundError, OSError) as e:
-            print(f"无法打开歌词文件: {lrc_source}, 错误: {e}")
+            self.logger.error(f"无法打开歌词文件: {lrc_source}, 错误: {e}")
             return []
 
     def _parse_lrc_lines(self, lines):

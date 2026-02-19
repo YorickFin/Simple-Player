@@ -2,10 +2,39 @@
     "folder_list": [
         "E:\\备份\\音乐\\日常",
         "E:\\备份\\音乐\\战歌",
-        "E:\\备份\\音乐\\英文"
+        "E:\\备份\\音乐\\英文",
+        "E:\\备份\\音乐\\诗歌剧"
     ],
     "default_open_folder": "E:\\备份\\音乐",
     "play_mode": "random_play",
     "volume": 50,
-    "desktop_lyrics": true
+    "desktop_lyrics": true,
+    "quit_program": true,
+    "shortcuts": {
+        "play_pause_key": [
+            "Lctrl",
+            "Lalt",
+            "Space"
+        ],
+        "pgup_key": [
+            "Lctrl",
+            "Lalt",
+            "Left"
+        ],
+        "pgdn_key": [
+            "Lctrl",
+            "Lalt",
+            "Right"
+        ],
+        "volup_key": [
+            "Lctrl",
+            "Lalt",
+            "Up"
+        ],
+        "voldn_key": [
+            "Lctrl",
+            "Lalt",
+            "Down"
+        ]
+    }
 }

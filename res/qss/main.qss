@@ -28,6 +28,12 @@ QPushButton:pressed
 	padding-left: 1px
 }
 
+QPushButton#fontColorPButton,
+QPushButton#strokeColorPButton
+{
+	background-color: transparent;
+	border: 1px solid #FFFFFF;
+}
 
 /************************************ QLabel  ************************************/
 
@@ -36,6 +42,47 @@ QLabel
 	background-color: transparent;
 }
 
+
+/************************************ QScrollArea  ************************************/
+QScrollArea
+{
+	background-color: transparent;
+	border: 0px solid;
+}
+
+QScrollArea > QWidget > QWidget
+{
+	background-color: transparent;
+}
+
+
+/************************************ QLineEdit  ************************************/
+
+QLineEdit
+{
+	background-color: transparent;
+	border: 1px solid #FFFFFF;
+
+}
+
+QLineEdit::hover
+{
+	border: 1px solid #cccccc;
+}
+
+QLineEdit:focus
+{
+	border: 1px solid #2196F3;
+}
+
+
+/************************************ QComboBox  ************************************/
+
+QComboBox
+{
+	background-color: transparent;
+	border: 1px solid #FFFFFF;
+}
 
 /************************************ QListWidget  ************************************/
 
@@ -554,7 +601,7 @@ QScrollBar
 QScrollBar::handle
 {
 	border-radius: 3px;
-    background: #5a6375;
+    background: rgba(91, 132, 176, 170);
     margin-left: 1px;
     margin-right: 1px;
 }
@@ -562,7 +609,7 @@ QScrollBar::handle
 /*滚动条鼠标悬停*/
 QScrollBar::handle:hover
 {
-    background: #6f7b91;
+    background: rgba(108, 156, 207, 170);
 }
 
 /*下方箭头*/

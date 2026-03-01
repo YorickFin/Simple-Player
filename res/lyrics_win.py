@@ -121,7 +121,7 @@ class LyricsWindow(QWidget):
         # 歌词位置配置
         self.lyric_pos = self.config.get('lyric_pos', [20, 80, 150, 210])
         self.lyric_scales = self.config.get('lyric_scales', [0.8, 1.0, 0.8, 0.0])
-        self.lyric_opacities = self.config.get('lyric_opacities', [0.5, 1.0, 0.5, 0.0])
+        self.lyric_alpha = self.config.get('lyric_alpha', [0.5, 1.0, 0.5, 0.0])
 
         # 应用到UI
         self._apply_lyric_config()
@@ -180,7 +180,7 @@ class LyricsWindow(QWidget):
             item.stroke_size = self.stroke_size
             item.setY(self.lyric_pos[i])
             item.setScale(self.lyric_scales[i])
-            item.setOpacity(self.lyric_opacities[i])
+            item.setOpacity(self.lyric_alpha[i])
 
     def set_font(self, font_family: str):
         self.config['font'] = font_family
@@ -228,9 +228,9 @@ class LyricsWindow(QWidget):
         self._save_config()
         self._apply_lyric_config()
 
-    def set_lyric_opacities(self, lyric_opacities: list):
-        self.config['lyric_opacities'] = lyric_opacities
-        self.lyric_opacities = lyric_opacities
+    def set_lyric_alpha(self, lyric_alpha: list):
+        self.config['lyric_alpha'] = lyric_alpha
+        self.lyric_alpha = lyric_alpha
         self._save_config()
         self._apply_lyric_config()
 
@@ -465,7 +465,7 @@ class LyricsWindow(QWidget):
             item.setHtml("")
             item.setY(self.lyric_pos[i])
             item.setScale(self.lyric_scales[i])
-            item.setOpacity(self.lyric_opacities[i])
+            item.setOpacity(self.lyric_alpha[i])
 
     def _format_text_as_html(self, text):
         """将文本格式化为HTML，实现自动换行和居中"""
@@ -576,13 +576,13 @@ class LyricsWindow(QWidget):
             else:
                 end_y = self.lyric_pos[i - 1]
                 end_scale = self.lyric_scales[i - 1]
-                end_opacity = self.lyric_opacities[i - 1]
+                end_opacity = self.lyric_alpha[i - 1]
 
             anims = self.create_animation(
                 item,
                 self.lyric_pos[i], end_y,
                 self.lyric_scales[i], end_scale,
-                self.lyric_opacities[i], end_opacity,
+                self.lyric_alpha[i], end_opacity,
                 duration
             )
             self.animation_group.addAnimation(anims[0])
@@ -631,7 +631,7 @@ class LyricsWindow(QWidget):
 
             item.setY(self.lyric_pos[i])
             item.setScale(self.lyric_scales[i])
-            item.setOpacity(self.lyric_opacities[i])
+            item.setOpacity(self.lyric_alpha[i])
 
             if self.lyric_scales[i] > 0:
                 compensated_width = self.scene.width() / self.lyric_scales[i]

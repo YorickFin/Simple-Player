@@ -1,12 +1,13 @@
 
+import re
 import json
 import time
 from pathlib import Path
 from threading import Thread
 from autoxkit.mousekey import HotkeyListener
 from PySide6.QtCore import QTimer, QStandardPaths, QPoint
-from PySide6.QtGui import QAction, QEnterEvent, QPixmap, QIcon, QCursor, Qt
-from PySide6.QtWidgets import (QTableView, QHeaderView, QFileDialog,
+from PySide6.QtGui import QAction, QEnterEvent, QPixmap, QIcon, QCursor, Qt, QFontDatabase, QIntValidator
+from PySide6.QtWidgets import (QTableView, QHeaderView, QFileDialog, QAbstractButton, QColorDialog,
                             QMenu, QSlider, QLabel, QWidgetAction)
 
 from res.ui import main_ui
@@ -99,6 +100,8 @@ class MainWindow(WindowSuper):
 
         # shortcut
         self.init_shortcut()
+        # lyric
+        self.init_lyric()
 
 
 # ########################################## init_config ##########################################
@@ -692,7 +695,9 @@ class MainWindow(WindowSuper):
         self.logger.info(f"退出程序配置变更: {state}")
         self.config['quit_program'] = state
 
-# ########################################## 快键键 ##########################################
+# ########################################## 设置页面 ##########################################
+
+    # ######################### 快键键 #####################
 
     def init_shortcut(self):
         """初始化快键键"""
@@ -764,7 +769,179 @@ class MainWindow(WindowSuper):
         self.ui.volumeUpKeyLEdit.setReadOnly(True)
         self.ui.volumeDnKeyLEdit.setReadOnly(True)
 
+    # ######################### 歌词 #####################
 
+    def init_lyric(self):
+        with open(r'res\config\desktop_lyrics.json', 'r', encoding='utf-8') as f:
+            self.lyric_config = json.load(f)
 
+        # 字体
+        self.font_list = QFontDatabase().families()
+        self.ui.fontCBox.addItems(self.font_list)
+        self.ui.fontCBox.setCurrentText(self.lyric_config['font'])
 
+        # 字体大小
+        self.ui.fontSizeLEdit.setText(str(self.lyric_config['font_size']))
+        # 限制输入为0-99的整数
+        self.ui.fontSizeLEdit.setValidator(QIntValidator(0, 99, self))
+
+        # 字体颜色
+        self.ui.fontColorPButton.setStyleSheet(f"background-color: {self.lyric_config['font_color']};")
+
+        # 描边大小
+        self.ui.strokeSizeLEdit.setText(str(self.lyric_config['stroke_size']))
+        # 限制输入为0-99的整数
+        self.ui.strokeSizeLEdit.setValidator(QIntValidator(0, 99, self))
+
+        # 描边颜色
+        self.ui.strokeColorPButton.setStyleSheet(f"background-color: {self.lyric_config['stroke_color']};")
+
+        # 歌词位置
+        self.ui.lyricPosLEdit.setText(', '.join(map(str, self.lyric_config['lyric_pos'])))
+
+        # 歌词缩放比
+        self.ui.lyricScalesLEdit.setText(', '.join(map(str, self.lyric_config['lyric_scales'])))
+
+        # 歌词透明度
+        self.ui.lyricAlphaLEdit.setText(', '.join(map(str, self.lyric_config['lyric_alpha'])))
+
+        # 信号槽连接
+        self.ui.fontCBox.currentTextChanged.connect(lambda text: self.signal_manager.send_signal({'action': 'set_font', 'info': text}))
+        self.ui.fontSizeLEdit.editingFinished.connect(lambda : self.signal_manager.send_signal({'action': 'set_font_size', 'info': int(self.ui.fontSizeLEdit.text())}))
+        self.ui.strokeSizeLEdit.editingFinished.connect(lambda : self.signal_manager.send_signal({'action': 'set_stroke_size', 'info': int(self.ui.strokeSizeLEdit.text())}))
+        self.ui.fontColorPButton.clicked.connect(self.change_font_color)
+        self.ui.strokeColorPButton.clicked.connect(self.change_stroke_color)
+        self.ui.lyricPosLEdit.editingFinished.connect(self.change_lyric_pos)
+        self.ui.lyricScalesLEdit.editingFinished.connect(self.change_lyric_scales)
+        self.ui.lyricAlphaLEdit.editingFinished.connect(self.change_lyric_alpha)
+
+    # 颜色面板
+    def color_dialog(self):
+        # 打开透明通道
+        # color_dialog = QColorDialog(options=QColorDialog.ShowAlphaChannel)
+        # 关闭透明通道
+        color_dialog = QColorDialog()
+
+        # 更改按钮的文字
+        QButton_name = {
+            "&Pick Screen Color" : "颜色拾取",
+            "&Add to Custom Colors" : "添加到自定义颜色",
+            "OK" : "确定",
+            "Cancel" : "取消"
+        }
+        for w in color_dialog.findChildren(QAbstractButton):
+            if w.text() in QButton_name:
+                w.setText(QButton_name[w.text()])
+
+        # 更改标签的文字
+        QLabel_name = {
+            "&Basic colors" : "基本颜色",
+            "&Custom colors" : "自定义颜色",
+            "Hu&e:" : "色相:",
+            "&Sat:" : "饱和度:",
+            "&Val:" : "鲜明度:",
+            "&Red:" : "R:",
+            "&Green:" : "G:",
+            "Bl&ue:" : "B:",
+            "A&lpha channel:" : "透明度:",
+            "&HTML:" : "色号:"
+        }
+        for w in color_dialog.findChildren(QLabel):
+            if w.text() in QLabel_name:
+                w.setText(QLabel_name[w.text()])
+
+        return color_dialog
+
+    def change_font_color(self):
+        """更改字体颜色"""
+        color_dialog = self.color_dialog()
+        if color_dialog.exec() == QColorDialog.Accepted:
+            color = color_dialog.selectedColor()
+            self.ui.fontColorPButton.setStyleSheet(f"background-color: {color.name()};")
+            self.signal_manager.send_signal({'action': 'set_font_color', 'info': color.name()})
+
+    def change_stroke_color(self):
+        """更改描边颜色"""
+        color_dialog = self.color_dialog()
+        if color_dialog.exec() == QColorDialog.Accepted:
+            color = color_dialog.selectedColor()
+            self.ui.strokeColorPButton.setStyleSheet(f"background-color: {color.name()};")
+            self.signal_manager.send_signal({'action': 'set_stroke_color', 'info': color.name()})
+
+    def change_lyric_pos(self):
+        """更改歌词位置"""
+
+        text = self.ui.lyricPosLEdit.text()
+        # 统一分隔符为英文逗号
+        text = re.sub(r'[,，]\s*', ',', text)
+
+        try:
+            list_lyric_pos = [int(x) for x in text.split(',') if x.strip()]
+        except ValueError:
+            self.logger.error('歌词位置格式错误，请输入整数')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': '歌词位置格式错误，请输入整数'})
+            return
+
+        if len(list_lyric_pos) != 4:
+            self.logger.error(f'歌词位置需要4个数值，当前提供了{len(list_lyric_pos)}个')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': f'歌词位置需要4个数值，当前提供了{len(list_lyric_pos)}个'})
+            return
+
+        # 检查范围：第一个 >= -50，最后一个 <= 300，且严格递增
+        if not (-50 <= list_lyric_pos[0] <= list_lyric_pos[1] <= list_lyric_pos[2] <= list_lyric_pos[3] <= 300):
+            self.logger.error('歌词位置设置错误：需满足 -50 <= pos0 <= pos1 <= pos2 <= pos3 <= 300')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': '歌词位置设置错误：需满足 -50 <= pos0 <= pos1 <= pos2 <= pos3 <= 300'})
+            return
+
+        self.signal_manager.send_signal({'action': 'set_lyric_pos', 'info': list_lyric_pos})
+
+    def change_lyric_scales(self):
+        """更改歌词缩放比"""
+        text = self.ui.lyricScalesLEdit.text()
+        text = re.sub(r'[,，]\s*', ',', text)
+
+        try:
+            list_lyric_scales = [float(x) for x in text.split(',') if x.strip()]
+        except ValueError:
+            self.logger.error('歌词缩放比格式错误，请输入浮点数')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': '歌词缩放比格式错误，请输入浮点数'})
+            return
+
+        if len(list_lyric_scales) != 4:
+            self.logger.error(f'歌词缩放比需要4个数值，当前提供了{len(list_lyric_scales)}个')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': f'歌词缩放比需要4个数值，当前提供了{len(list_lyric_scales)}个'})
+            return
+
+        # 检查范围：每个值在0.0-1.0之间
+        if not all(0.0 <= x <= 1.0 for x in list_lyric_scales):
+            self.logger.error('歌词缩放比设置错误：每个值需在0.0-1.0之间')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': '歌词缩放比设置错误：每个值需在0.0-1.0之间'})
+            return
+
+        self.signal_manager.send_signal({'action': 'set_lyric_scales', 'info': list_lyric_scales})
+
+    def change_lyric_alpha(self):
+        """更改歌词透明度"""
+        text = self.ui.lyricAlphaLEdit.text()
+        text = re.sub(r'[,，]\s*', ',', text)
+
+        try:
+            list_lyric_alpha = [float(x) for x in text.split(',') if x.strip()]
+        except ValueError:
+            self.logger.error('歌词透明度格式错误，请输入浮点数')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': '歌词透明度格式错误，请输入浮点数'})
+            return
+
+        if len(list_lyric_alpha) != 4:
+            self.logger.error(f'歌词透明度需要4个数值，当前提供了{len(list_lyric_alpha)}个')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': f'歌词透明度需要4个数值，当前提供了{len(list_lyric_alpha)}个'})
+            return
+
+        # 检查范围：每个值在0.0-1.0之间
+        if not all(0.0 <= x <= 1.0 for x in list_lyric_alpha):
+            self.logger.error('歌词透明度设置错误：每个值需在0.0-1.0之间')
+            self.signal_manager.send_signal({'action': '错误弹窗', 'info': '歌词透明度设置错误：每个值需在0.0-1.0之间'})
+            return
+
+        self.signal_manager.send_signal({'action': 'set_lyric_alpha', 'info': list_lyric_alpha})
 

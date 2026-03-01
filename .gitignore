@@ -8,6 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+uv.lock
 logging/
 _internal/
 plugins/
@@ -15,3 +16,4 @@ plugins/
 debug.py
 Simple Player.exe
 z_main-D.spec
+Logs/

@@ -3,7 +3,7 @@ import shutil
 import random
 import time
 import subprocess
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 from PySide6.QtCore import QObject, Signal, QTimer, Qt
 from PySide6.QtGui import QIcon, QPixmap
 from threading import Thread, Event
@@ -72,6 +72,7 @@ class SlotManager(QObject):
             '激活窗口': lambda: self.activate_window(),
             '创建托盘': lambda: self.create_tray(),
             '退出程序': lambda: self.quit_program(),
+            '错误弹窗': lambda: self.error_popup(value),
 
             'seek': lambda: self.player.seek(value['info']),
             'play_music': lambda: self.play_music(value),
@@ -81,6 +82,15 @@ class SlotManager(QObject):
             'clear_play_info': lambda: self.clear_play_info(),
             'open_desktop_lyrics': lambda: self.open_desktop_lyrics(),
             'close_desktop_lyrics': lambda: self.close_desktop_lyrics(),
+
+            'set_font': lambda: self.lyrics_window.set_font(value['info']),
+            'set_font_size': lambda: self.lyrics_window.set_font_size(value['info']),
+            'set_stroke_size': lambda: self.lyrics_window.set_stroke_size(value['info']),
+            'set_font_color': lambda: self.lyrics_window.set_font_color(value['info']),
+            'set_stroke_color': lambda: self.lyrics_window.set_stroke_color(value['info']),
+            'set_lyric_pos': lambda: self.lyrics_window.set_lyric_pos(value['info']),
+            'set_lyric_scales': lambda: self.lyrics_window.set_lyric_scales(value['info']),
+            'set_lyric_alpha': lambda: self.lyrics_window.set_lyric_alpha(value['info']),
         }
         branch.get(value.get('action'), lambda: print(f'action not found: {value}'))()
 
@@ -501,6 +511,14 @@ class SlotManager(QObject):
         """激活窗口"""
         self.main_window.show()
         self.main_window.activateWindow()
+
+    def error_popup(self, value: dict):
+        """弹出错误弹窗"""
+        msg_box = QMessageBox(self.main_window)
+        msg_box.setWindowTitle("错误")
+        msg_box.setText(value['info'])
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.exec()
 
     def create_tray(self):
         """创建托盘"""

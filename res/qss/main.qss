@@ -35,11 +35,46 @@ QPushButton#strokeColorPButton
 	border: 1px solid #FFFFFF;
 }
 
+QPushButton#fontColorPButton:hover,
+QPushButton#strokeColorPButton:hover
+{
+	border: 1px solid #2196F3;
+}
+
 /************************************ QLabel  ************************************/
 
 QLabel
 {
 	background-color: transparent;
+}
+
+
+/************************************ QMessageBox  ************************************/
+
+QMessageBox
+{
+	background-color: #1F2430;
+}
+
+QMessageBox QLabel
+{
+	color: #FFFFFF;
+	background-color: transparent;
+}
+
+QMessageBox QPushButton
+{
+	background-color: #3B4252;
+	color: #FFFFFF;
+	border: 1px solid #4C566A;
+	border-radius: 4px;
+	padding: 6px 16px;
+	min-width: 60px;
+}
+
+QMessageBox QPushButton:hover
+{
+	background-color: #4C566A;
 }
 
 
@@ -60,14 +95,15 @@ QScrollArea > QWidget > QWidget
 
 QLineEdit
 {
+	font: 10pt "宋体";
+	font-size: 13pt;
 	background-color: transparent;
 	border: 1px solid #FFFFFF;
-
 }
 
 QLineEdit::hover
 {
-	border: 1px solid #cccccc;
+	border: 1px solid #2196F3;
 }
 
 QLineEdit:focus
@@ -75,14 +111,33 @@ QLineEdit:focus
 	border: 1px solid #2196F3;
 }
 
-
 /************************************ QComboBox  ************************************/
 
+/*原始*/
 QComboBox
 {
 	background-color: transparent;
 	border: 1px solid #FFFFFF;
 }
+
+/*选项样式*/
+QComboBox QListView::item {
+	margin: 10px;
+	height: 10px;
+}
+
+/*下拉选项样式*/
+QComboBox QAbstractItemView
+{
+	background-color:#232936;
+}
+
+/*悬停*/
+QComboBox::hover
+{
+	border: 1px solid #2196F3;
+}
+
 
 /************************************ QListWidget  ************************************/
 

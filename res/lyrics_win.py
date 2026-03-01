@@ -182,6 +182,10 @@ class LyricsWindow(QWidget):
             item.setScale(self.lyric_scales[i])
             item.setOpacity(self.lyric_alpha[i])
 
+    def _save_config(self):
+        with open(r'res\config\desktop_lyrics.json', 'w', encoding='utf-8') as f:
+            json.dump(self.config, f, ensure_ascii=False, indent=4)
+
     def set_font(self, font_family: str):
         self.config['font'] = font_family
         self.lyric_font.setFamily(font_family)
@@ -212,9 +216,8 @@ class LyricsWindow(QWidget):
         self._save_config()
         self._apply_lyric_config()
 
-    def _save_config(self):
-        with open(r'res\config\desktop_lyrics.json', 'w', encoding='utf-8') as f:
-            json.dump(self.config, f, ensure_ascii=False, indent=4)
+    def set_lyric_offset(self, offset_seconds: float):
+        self.lyric_offset = int(offset_seconds * 1000)
 
     def set_lyric_pos(self, lyric_pos: list):
         self.config['lyric_pos'] = lyric_pos
@@ -532,12 +535,6 @@ class LyricsWindow(QWidget):
         opacity_anim.setEasingCurve(QEasingCurve.OutCubic)
 
         return x_anim, y_anim, scale_anim, opacity_anim
-
-    def set_lyric_offset(self, offset_seconds: float):
-        self.lyric_offset = int(offset_seconds * 1000)
-
-    def get_lyric_offset(self) -> float:
-        return self.lyric_offset / 1000
 
     def sync_to_time(self, play_time_ms):
         if not self.lyrics:

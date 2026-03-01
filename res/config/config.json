@@ -1,9 +1,11 @@
 {
-    "folder_list": [],
-    "default_open_folder": "",
+    "folder_list": [
+        "E:\\备份\\音乐\\日常"
+    ],
+    "default_open_folder": "E:\\备份\\音乐",
     "play_mode": "random_play",
     "volume": 50,
-    "desktop_lyrics": false,
+    "desktop_lyrics": true,
     "quit_program": false,
     "shortcuts": {
         "play_pause_key": [

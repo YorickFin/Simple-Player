@@ -16,25 +16,33 @@ class OutlinedTextItem(QGraphicsTextItem):
         super().__init__(text)
         self.stroke_color = stroke_color
         self.stroke_size = stroke_size
+        # 缓存属性
+        self._cached_path = None
+        self._cached_text = ""
+        self._cached_font = None
 
     def paint(self, painter, option, widget=None):
+
         painter.save()
 
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.TextAntialiasing)
 
         doc = self.document()
+        text = doc.toPlainText().split('\n')[0] if doc.toPlainText() else ""
 
-        for block in doc.toPlainText().split('\n'):
-            if not block:
-                continue
+        # 检查是否需要更新缓存
+        if text != self._cached_text or self.font() != self._cached_font:
+            self._cached_text = text
+            self._cached_font = self.font()
+            self._cached_path = QPainterPath()
+            self._cached_path.addText(0, 0, self.font(), text)
 
-            path = QPainterPath()
-            path.addText(0, 0, self.font(), block)
-
+        if self._cached_path:
             rect = self.boundingRect()
-            x = (rect.width() - path.boundingRect().width()) / 2
-            y = (rect.height() - path.boundingRect().height()) / 2 + path.boundingRect().height()
+            path_rect = self._cached_path.boundingRect()
+            x = (rect.width() - path_rect.width()) / 2
+            y = (rect.height() - path_rect.height()) / 2 + path_rect.height()
 
             painter.translate(x, y)
 
@@ -42,11 +50,10 @@ class OutlinedTextItem(QGraphicsTextItem):
             pen.setJoinStyle(Qt.RoundJoin)
             pen.setCapStyle(Qt.RoundCap)
 
-            painter.strokePath(path, pen)
-            painter.fillPath(path, QBrush(self.defaultTextColor()))
+            painter.strokePath(self._cached_path, pen)
+            painter.fillPath(self._cached_path, QBrush(self.defaultTextColor()))
 
             painter.translate(-x, -y)
-            break
 
         painter.restore()
 
@@ -249,8 +256,8 @@ class LyricsWindow(QWidget):
 
         self.desktop_size = [QApplication.instance().screens()[0].size().width(), QApplication.instance().screens()[0].size().height()]
 
-        # 开启鼠标跟踪后, 鼠标离开窗口或进入窗口会触发 mouseMoveEvent 事件
-        self.setMouseTracking(True)
+        # 只对背景窗口开启鼠标跟踪，避免整个窗口的鼠标跟踪导致频繁事件
+        self.ui.background.setMouseTracking(True)
 
         self.ui.background.installEventFilter(self)  # 背景窗口绑定事件过滤器
 
@@ -285,8 +292,11 @@ class LyricsWindow(QWidget):
             if event.buttons() == Qt.LeftButton:
                 # 移动事件
                 if self._move_drag:
-                    self.move_pos = event.globalPosition() - self.cursor_win_pos
-                    self.move(self.move_pos.x(), self.move_pos.y())
+                    new_pos = event.globalPosition() - self.cursor_win_pos
+                    # 只在位置变化时才移动窗口，减少重绘
+                    if not self.move_pos or new_pos != self.move_pos:
+                        self.move_pos = new_pos
+                        self.move(self.move_pos.x(), self.move_pos.y())
             event.accept()
 
     def mouseReleaseEvent(self, event):
@@ -342,6 +352,8 @@ class LyricsWindow(QWidget):
         self.animation_group = None
         self.animation_running = False
         self.lyric_offset = 0
+        # 缓存当前显示的歌词文本
+        self._current_display_texts = ["", "", "", ""]
 
     def init_lyric_ui(self):
         self.ui.graphicsView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -356,11 +368,12 @@ class LyricsWindow(QWidget):
 
         # 创建场景
         self.scene = QGraphicsScene(0, 0, view_width, view_height, self)
-        self.scene.setBackgroundBrush(Qt.transparent)
+        # 使用半透明背景而不是完全透明，避免绘制问题
+        self.scene.setBackgroundBrush(QColor(0, 0, 0, 1))
         self.ui.graphicsView.setScene(self.scene)
 
-        # 设置视图不更新背景，减少重绘
-        self.ui.graphicsView.setViewportUpdateMode(QGraphicsView.MinimalViewportUpdate)
+        # 设置视图更新模式，确保动画过程中正确更新
+        self.ui.graphicsView.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         self.ui.graphicsView.setOptimizationFlag(QGraphicsView.DontAdjustForAntialiasing, True)
         self.ui.graphicsView.setRenderHint(QPainter.Antialiasing, False)
         self.ui.graphicsView.setRenderHint(QPainter.TextAntialiasing, True)
@@ -456,6 +469,11 @@ class LyricsWindow(QWidget):
 
     def _reset_and_update_display(self):
         self._reset_ui_state()
+        # 确保歌词项的文本宽度正确设置，使歌词在初始显示时就居中对齐
+        for i, item in enumerate(self.lyric_items):
+            if self.lyric_scales[i] > 0:
+                compensated_width = self.scene.width() / self.lyric_scales[i]
+                item.setTextWidth(compensated_width)
         self._update_display()
 
     def _reset_ui_state(self):
@@ -561,6 +579,9 @@ class LyricsWindow(QWidget):
         if self.animation_group:
             self.animation_group.stop()
 
+        # 强制刷新视图，避免拖影
+        self.ui.graphicsView.viewport().update()
+
         self.animation_group = QParallelAnimationGroup(self)
         duration = 500
         self.animation_running = True
@@ -600,9 +621,12 @@ class LyricsWindow(QWidget):
         self.animation_group.start()
 
     def _update_text_width_during_animation(self, item, current_scale, start_scale, end_scale):
+        # 只在缩放值变化超过阈值时才更新，减少重绘频率
         if current_scale > 0:
             compensated_width = self.scene.width() / current_scale
-            item.setTextWidth(compensated_width)
+            # 检查当前文本宽度是否与计算值有显著差异
+            if abs(item.textWidth() - compensated_width) > 1.0:
+                item.setTextWidth(compensated_width)
 
     def _on_animation_finished(self):
         self.animation_running = False
@@ -620,16 +644,29 @@ class LyricsWindow(QWidget):
         for i, item in enumerate(self.lyric_items):
             text = texts[i]
 
-            if text:
-                html_text = self._format_text_as_html(text)
-                item.setHtml(html_text)
-            else:
-                item.setHtml("")
+            # 只在文本变化时更新
+            if text != self._current_display_texts[i]:
+                self._current_display_texts[i] = text
+                if text:
+                    html_text = self._format_text_as_html(text)
+                    item.setHtml(html_text)
+                else:
+                    item.setHtml("")
 
-            item.setY(self.lyric_pos[i])
-            item.setScale(self.lyric_scales[i])
-            item.setOpacity(self.lyric_alpha[i])
-
+            # 确保文本宽度正确设置，使文本居中对齐
             if self.lyric_scales[i] > 0:
                 compensated_width = self.scene.width() / self.lyric_scales[i]
-                item.setTextWidth(compensated_width)
+                if item.textWidth() != compensated_width:
+                    item.setTextWidth(compensated_width)
+
+            # 只在位置变化时更新
+            if item.y() != self.lyric_pos[i]:
+                item.setY(self.lyric_pos[i])
+
+            # 只在缩放变化时更新
+            if item.scale() != self.lyric_scales[i]:
+                item.setScale(self.lyric_scales[i])
+
+            # 只在透明度变化时更新
+            if item.opacity() != self.lyric_alpha[i]:
+                item.setOpacity(self.lyric_alpha[i])

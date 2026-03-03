@@ -1,9 +1,10 @@
 import re
 import json
-from PySide6.QtWidgets import QWidget, QApplication
+from PySide6.QtWidgets import QWidget, QApplication, QGraphicsView
 from PySide6.QtCore import QEvent, QTimer, QPropertyAnimation, QParallelAnimationGroup, QEasingCurve
 from PySide6.QtGui import Qt, QFont, QColor, QPainter, QPainterPath, QPen, QBrush
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsTextItem, QGraphicsView
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsTextItem
+from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
 from pathlib import Path
 
@@ -25,8 +26,10 @@ class OutlinedTextItem(QGraphicsTextItem):
 
         painter.save()
 
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setRenderHint(QPainter.TextAntialiasing)
+        # 启用所有相关的渲染提示以获得最佳文字清晰度
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
 
         doc = self.document()
         text = doc.toPlainText().split('\n')[0] if doc.toPlainText() else ""
@@ -56,6 +59,24 @@ class OutlinedTextItem(QGraphicsTextItem):
             painter.translate(-x, -y)
 
         painter.restore()
+
+
+class ClearGraphicsView(QGraphicsView):
+    """自定义 QGraphicsView，在绘制前强制用透明清除视口，解决 OpenGL 拖影问题"""
+    def paintEvent(self, event):
+        # 使用清除模式填充整个视口为透明，以清除 OpenGL 缓冲区
+        painter = QPainter(self.viewport())
+        painter.setCompositionMode(QPainter.CompositionMode_Clear)
+        painter.fillRect(self.viewport().rect(), Qt.transparent)
+        painter.end()
+        super().paintEvent(event)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        # 启用所有相关的渲染提示以获得最佳文字清晰度
+        self.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        self.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
+        self.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
 
 
 class LyricsWindow(QWidget):
@@ -356,29 +377,70 @@ class LyricsWindow(QWidget):
         self._current_display_texts = ["", "", "", ""]
 
     def init_lyric_ui(self):
-        self.ui.graphicsView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.ui.graphicsView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.ui.graphicsView.setFrameShape(QGraphicsView.NoFrame)
+        # 先保留原始视图的引用，后续会替换
+        old_view = self.ui.graphicsView
 
-        # 设置视图为固定大小，避免滚动
+        # 设置基本属性（这些在替换后需要重新应用）
+        old_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        old_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        old_view.setFrameShape(QGraphicsView.NoFrame)
+
         view_width = int(self.width()) + 160
         view_height = int(self.height())
-        self.ui.graphicsView.setFixedSize(view_width, view_height)
-        self.ui.graphicsView.setSceneRect(0, 0, view_width, view_height)
+        old_view.setFixedSize(view_width, view_height)
+        old_view.setSceneRect(0, 0, view_width, view_height)
 
         # 创建场景
         self.scene = QGraphicsScene(0, 0, view_width, view_height, self)
-        # 使用半透明背景而不是完全透明，避免绘制问题
-        self.scene.setBackgroundBrush(QColor(0, 0, 0, 1))
-        self.ui.graphicsView.setScene(self.scene)
+        self.scene.setBackgroundBrush(Qt.transparent)
+        old_view.setScene(self.scene)
 
-        # 设置视图更新模式，确保动画过程中正确更新
-        self.ui.graphicsView.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
-        self.ui.graphicsView.setOptimizationFlag(QGraphicsView.DontAdjustForAntialiasing, True)
-        self.ui.graphicsView.setRenderHint(QPainter.Antialiasing, False)
-        self.ui.graphicsView.setRenderHint(QPainter.TextAntialiasing, True)
-        self.ui.graphicsView.setRenderHint(QPainter.SmoothPixmapTransform, False)
+        # 设置视图更新模式
+        old_view.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
+        old_view.setOptimizationFlag(QGraphicsView.OptimizationFlag.DontAdjustForAntialiasing, False)
+        old_view.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        old_view.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
+        old_view.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
 
+        # 创建OpenGL视口
+        gl_widget = QOpenGLWidget()
+        # 设置OpenGL格式，启用抗锯齿
+        format = gl_widget.format()
+        format.setSamples(4)  # 启用4x抗锯齿
+        format.setAlphaBufferSize(8)
+        gl_widget.setFormat(format)
+        gl_widget.setUpdateBehavior(QOpenGLWidget.NoPartialUpdate)
+        gl_widget.setAutoFillBackground(False)
+        old_view.setViewport(gl_widget)
+
+        # 现在将原视图替换为自定义的ClearGraphicsView，以强制清除背景
+        parent = old_view.parent()
+        # 创建新视图
+        new_view = ClearGraphicsView(parent)
+        # 复制几何
+        new_view.setGeometry(old_view.geometry())
+        new_view.setObjectName(old_view.objectName())
+        # 复制策略和标志
+        new_view.setHorizontalScrollBarPolicy(old_view.horizontalScrollBarPolicy())
+        new_view.setVerticalScrollBarPolicy(old_view.verticalScrollBarPolicy())
+        new_view.setFrameShape(old_view.frameShape())
+        new_view.setRenderHints(old_view.renderHints())
+        new_view.setViewportUpdateMode(old_view.viewportUpdateMode())
+        new_view.setOptimizationFlags(old_view.optimizationFlags())
+        # 设置场景（场景已创建）
+        new_view.setScene(self.scene)
+        # 重新设置OpenGL视口（需要更改父级）
+        gl_widget.setParent(new_view)
+        new_view.setViewport(gl_widget)
+        # 替换布局中的视图
+        layout = parent.layout()
+        layout.replaceWidget(old_view, new_view)
+        # 删除旧视图
+        old_view.deleteLater()
+        # 更新引用
+        self.ui.graphicsView = new_view
+
+        # 创建歌词项
         for i in range(4):
             item = OutlinedTextItem("", stroke_color=QColor(0, 0, 0), stroke_size=10)
             item.setTextWidth(view_width)

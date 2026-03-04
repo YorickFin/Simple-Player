@@ -1,11 +1,11 @@
 [project]
 name = "Simple-Player"
-version = "1.3.0"
+version = "1.4.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "autoxkit>=0.4.3",
+    "autoxkit>=0.4.5",
     "mutagen>=1.47.0",
     "pygame>=2.6.1",
     "pyside6>=6.10.1",

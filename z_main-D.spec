@@ -4,7 +4,7 @@ block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=['E:\project\Python\TingYu\Simple Player'],
+    pathex=[],
     binaries=[],
     datas=[],
     hiddenimports=[
